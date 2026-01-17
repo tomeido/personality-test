@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성격 테스트 | MBTI & Enneagram 실시간 분석</title>
+    <meta name="description" content="MBTI와 에니어그램 성격 테스트를 실시간으로 진행하며 당신의 성격 유형을 분석해보세요.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Start Screen -->
+    <section id="start-screen" class="screen active">
+        <div class="container">
+            <div class="hero">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <span class="icon-brain">🧠</span>
+                    </div>
+                </div>
+                <h1 class="hero-title">
+                    <span class="gradient-text">나를 발견하는 여정</span>
+                </h1>
+                <p class="hero-subtitle">
+                    실시간으로 변화하는 성격 분석을 경험하세요.<br>
+                    각 선택이 당신의 성격 유형을 어떻게 바꾸는지 직접 확인할 수 있습니다.
+                </p>
+            </div>
+
+            <div class="test-options">
+                <button class="test-card" onclick="startTest('mbti')">
+                    <div class="card-glow mbti-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">🎭</div>
+                        <h2>MBTI 테스트</h2>
+                        <p>16가지 성격 유형 중 나는 어디에 속할까?</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 5분</span>
+                            <span>📝 20문항</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>INTJ</span><span>ENFP</span><span>ISTP</span><span>+13</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="test-card" onclick="startTest('enneagram')">
+                    <div class="card-glow enneagram-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">💜</div>
+                        <h2>Enneagram 테스트</h2>
+                        <p>9가지 성격 유형으로 알아보는 내면의 세계</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 7분</span>
+                            <span>📝 27문항</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>1번</span><span>4번</span><span>7번</span><span>+6</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="test-card" onclick="startTest('instinct')">
+                    <div class="card-glow instinct-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">🔥</div>
+                        <h2>본능 유형 테스트</h2>
+                        <p>SP/SO/SX 본능적 변형으로 에니어그램 하위유형 발견</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 4분</span>
+                            <span>📝 18문항</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>🏠 SP</span><span>👥 SO</span><span>🔥 SX</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="test-card" onclick="startTest('both')">
+                    <div class="card-glow both-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">✨</div>
+                        <h2>통합 테스트</h2>
+                        <p>MBTI와 Enneagram을 함께 분석해 성격 프로필 완성</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 12분</span>
+                            <span>📝 47문항</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="test-card full-test" onclick="startTest('complete')">
+                    <div class="card-glow complete-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">🌟</div>
+                        <h2>완전 통합 테스트</h2>
+                        <p>MBTI + Enneagram + 본능 유형을 모두 분석해 가장 완벽한 성격 프로필을 만들어보세요</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 16분</span>
+                            <span>📝 65문항</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>🎭 MBTI</span><span>💜 Enneagram</span><span>🔥 본능</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </section>
+
+    <!-- Test Screen -->
+    <section id="test-screen" class="screen">
+        <div class="test-container">
+            <!-- Left Panel: Question -->
+            <div class="question-panel">
+                <div class="test-header">
+                    <button class="back-btn" onclick="goToStart()">
+                        <span>←</span> 처음으로
+                    </button>
+                    <div class="test-type-badge" id="test-type-badge">MBTI</div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-info">
+                        <span id="progress-text">질문 1 / 20</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="question-content">
+                    <div class="question-number" id="question-number">Q1</div>
+                    <h2 class="question-text" id="question-text">
+                        새로운 사람들과 만나는 것이 즐겁고 에너지를 얻는다.
+                    </h2>
+                </div>
+
+                <div class="answer-options" id="answer-options">
+                    <button class="answer-btn" onclick="selectAnswer(0)">
+                        <span class="answer-icon">😊</span>
+                        <span class="answer-text">매우 그렇다</span>
+                    </button>
+                    <button class="answer-btn" onclick="selectAnswer(1)">
+                        <span class="answer-icon">🙂</span>
+                        <span class="answer-text">그렇다</span>
+                    </button>
+                    <button class="answer-btn" onclick="selectAnswer(2)">
+                        <span class="answer-icon">😐</span>
+                        <span class="answer-text">보통이다</span>
+                    </button>
+                    <button class="answer-btn" onclick="selectAnswer(3)">
+                        <span class="answer-icon">🤔</span>
+                        <span class="answer-text">아니다</span>
+                    </button>
+                    <button class="answer-btn" onclick="selectAnswer(4)">
+                        <span class="answer-icon">😌</span>
+                        <span class="answer-text">매우 아니다</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Live Visualization -->
+            <div class="visualization-panel">
+                <div class="viz-header">
+                    <h3>📊 실시간 타입 분석</h3>
+                    <p class="viz-subtitle">선택에 따라 실시간으로 변화합니다</p>
+                </div>
+
+                <!-- MBTI Visualization -->
+                <div id="mbti-viz" class="viz-content">
+                    <div class="current-type">
+                        <span class="type-label">현재 예상 유형</span>
+                        <span class="type-value" id="current-mbti-type">----</span>
+                    </div>
+
+                    <div class="axis-charts">
+                        <div class="axis-item">
+                            <div class="axis-labels">
+                                <span class="label-left">E <small>외향</small></span>
+                                <span class="label-right"><small>내향</small> I</span>
+                            </div>
+                            <div class="axis-bar">
+                                <div class="axis-fill ei-fill" id="ei-fill" style="--left-percent: 50%"></div>
+                                <div class="axis-center"></div>
+                            </div>
+                            <div class="axis-values">
+                                <span id="e-value">50%</span>
+                                <span id="i-value">50%</span>
+                            </div>
+                        </div>
+
+                        <div class="axis-item">
+                            <div class="axis-labels">
+                                <span class="label-left">S <small>감각</small></span>
+                                <span class="label-right"><small>직관</small> N</span>
+                            </div>
+                            <div class="axis-bar">
+                                <div class="axis-fill sn-fill" id="sn-fill" style="--left-percent: 50%"></div>
+                                <div class="axis-center"></div>
+                            </div>
+                            <div class="axis-values">
+                                <span id="s-value">50%</span>
+                                <span id="n-value">50%</span>
+                            </div>
+                        </div>
+
+                        <div class="axis-item">
+                            <div class="axis-labels">
+                                <span class="label-left">T <small>사고</small></span>
+                                <span class="label-right"><small>감정</small> F</span>
+                            </div>
+                            <div class="axis-bar">
+                                <div class="axis-fill tf-fill" id="tf-fill" style="--left-percent: 50%"></div>
+                                <div class="axis-center"></div>
+                            </div>
+                            <div class="axis-values">
+                                <span id="t-value">50%</span>
+                                <span id="f-value">50%</span>
+                            </div>
+                        </div>
+
+                        <div class="axis-item">
+                            <div class="axis-labels">
+                                <span class="label-left">J <small>판단</small></span>
+                                <span class="label-right"><small>인식</small> P</span>
+                            </div>
+                            <div class="axis-bar">
+                                <div class="axis-fill jp-fill" id="jp-fill" style="--left-percent: 50%"></div>
+                                <div class="axis-center"></div>
+                            </div>
+                            <div class="axis-values">
+                                <span id="j-value">50%</span>
+                                <span id="p-value">50%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enneagram Visualization -->
+                <div id="enneagram-viz" class="viz-content" style="display: none;">
+                    <div class="current-type">
+                        <span class="type-label">현재 예상 유형</span>
+                        <span class="type-value enneagram-type" id="current-enneagram-type">?번 유형</span>
+                    </div>
+
+                    <div class="enneagram-bars">
+                        <div class="ennea-bar-item" data-type="1">
+                            <div class="ennea-info">
+                                <span class="ennea-num">1</span>
+                                <span class="ennea-name">개혁가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-1-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-1-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="2">
+                            <div class="ennea-info">
+                                <span class="ennea-num">2</span>
+                                <span class="ennea-name">조력가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-2-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-2-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="3">
+                            <div class="ennea-info">
+                                <span class="ennea-num">3</span>
+                                <span class="ennea-name">성취가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-3-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-3-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="4">
+                            <div class="ennea-info">
+                                <span class="ennea-num">4</span>
+                                <span class="ennea-name">예술가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-4-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-4-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="5">
+                            <div class="ennea-info">
+                                <span class="ennea-num">5</span>
+                                <span class="ennea-name">탐구가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-5-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-5-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="6">
+                            <div class="ennea-info">
+                                <span class="ennea-num">6</span>
+                                <span class="ennea-name">충성가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-6-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-6-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="7">
+                            <div class="ennea-info">
+                                <span class="ennea-num">7</span>
+                                <span class="ennea-name">열정가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-7-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-7-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="8">
+                            <div class="ennea-info">
+                                <span class="ennea-num">8</span>
+                                <span class="ennea-name">도전가</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-8-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-8-percent">0%</span>
+                        </div>
+                        <div class="ennea-bar-item" data-type="9">
+                            <div class="ennea-info">
+                                <span class="ennea-num">9</span>
+                                <span class="ennea-name">평화주의자</span>
+                            </div>
+                            <div class="ennea-bar">
+                                <div class="ennea-fill" id="ennea-9-fill"></div>
+                            </div>
+                            <span class="ennea-percent" id="ennea-9-percent">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instinct Visualization -->
+                <div id="instinct-viz" class="viz-content" style="display: none;">
+                    <div class="current-type">
+                        <span class="type-label">현재 예상 본능 유형</span>
+                        <span class="type-value instinct-type" id="current-instinct-type">? 유형</span>
+                    </div>
+
+                    <div class="instinct-bars">
+                        <div class="instinct-bar-item" data-instinct="SP">
+                            <div class="instinct-info">
+                                <span class="instinct-icon">🏠</span>
+                                <span class="instinct-name">자기보존 (SP)</span>
+                            </div>
+                            <div class="instinct-bar">
+                                <div class="instinct-fill sp-fill" id="sp-fill"></div>
+                            </div>
+                            <span class="instinct-percent" id="sp-percent">0%</span>
+                        </div>
+                        <div class="instinct-bar-item" data-instinct="SO">
+                            <div class="instinct-info">
+                                <span class="instinct-icon">👥</span>
+                                <span class="instinct-name">사회형 (SO)</span>
+                            </div>
+                            <div class="instinct-bar">
+                                <div class="instinct-fill so-fill" id="so-fill"></div>
+                            </div>
+                            <span class="instinct-percent" id="so-percent">0%</span>
+                        </div>
+                        <div class="instinct-bar-item" data-instinct="SX">
+                            <div class="instinct-info">
+                                <span class="instinct-icon">🔥</span>
+                                <span class="instinct-name">일대일형 (SX)</span>
+                            </div>
+                            <div class="instinct-bar">
+                                <div class="instinct-fill sx-fill" id="sx-fill"></div>
+                            </div>
+                            <span class="instinct-percent" id="sx-percent">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="viz-footer">
+                    <p>💡 답변을 선택하면 실시간으로 분석이 업데이트됩니다</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Result Screen -->
+    <section id="result-screen" class="screen">
+        <div class="result-container">
+            <div class="result-header">
+                <div class="confetti"></div>
+                <h1>🎉 테스트 완료!</h1>
+                <p>당신의 성격 유형을 분석했습니다</p>
+            </div>
+
+            <div class="result-cards" id="result-cards">
+                <!-- MBTI Result Card -->
+                <div class="result-card mbti-result" id="mbti-result" style="display: none;">
+                    <div class="result-type-badge">MBTI</div>
+                    <div class="result-type-display">
+                        <span class="result-type-value" id="result-mbti-type">INTJ</span>
+                        <span class="result-type-name" id="result-mbti-name">전략가</span>
+                    </div>
+                    <div class="result-axes" id="result-mbti-axes">
+                        <!-- Filled dynamically -->
+                    </div>
+                    <div class="result-description" id="result-mbti-description">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <!-- Enneagram Result Card -->
+                <div class="result-card enneagram-result" id="enneagram-result" style="display: none;">
+                    <div class="result-type-badge">Enneagram</div>
+                    <div class="result-type-display">
+                        <span class="result-type-value enneagram" id="result-enneagram-type">4</span>
+                        <span class="result-type-name" id="result-enneagram-name">예술가</span>
+                    </div>
+                    <div class="result-wing" id="result-wing">
+                        <!-- Wing info -->
+                    </div>
+                    <div class="result-description" id="result-enneagram-description">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <!-- Instinct Result Card -->
+                <div class="result-card instinct-result" id="instinct-result" style="display: none;">
+                    <div class="result-type-badge">본능 유형</div>
+                    <div class="result-type-display">
+                        <span class="result-type-icon" id="result-instinct-icon">🔥</span>
+                        <span class="result-type-value instinct" id="result-instinct-type">SX</span>
+                        <span class="result-type-name" id="result-instinct-name">일대일형</span>
+                    </div>
+                    <div class="result-instinct-stack" id="result-instinct-stack">
+                        <!-- Instinct stacking info -->
+                    </div>
+                    <div class="result-subtype" id="result-subtype">
+                        <!-- Subtype info (e.g., 4SX) -->
+                    </div>
+                    <div class="result-description" id="result-instinct-description">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Similar People Section -->
+            <div class="similar-people-section" id="similar-people-section" style="display: none;">
+                <h2>🌟 나와 비슷한 유명인 & 캐릭터</h2>
+                <p class="similar-people-subtitle">PDB(Personality Database) 데이터 기반</p>
+
+                <div class="similar-people-grid" id="similar-people-grid">
+                    <!-- Filled dynamically -->
+                </div>
+            </div>
+
+            <div class="result-actions">
+                <button class="action-btn primary" onclick="goToStart()">
+                    <span>🔄</span> 다시 테스트하기
+                </button>
+                <button class="action-btn secondary" onclick="shareResult()">
+                    <span>📤</span> 결과 공유하기
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script src="data/mbti-questions.js"></script>
+    <script src="data/enneagram-questions.js"></script>
+    <script src="data/instinct-questions.js"></script>
+    <script src="data/pdb-data.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
