@@ -1,8 +1,9 @@
 // ===== State Management =====
-let currentTest = null; // 'mbti', 'enneagram', 'instinct', 'both', or 'complete'
+let currentTest = null; // 'mbti', 'enneagram', 'instinct', 'both', 'complete', or 'mbti-yesno'
 let currentPhase = null; // 'mbti', 'enneagram', or 'instinct'
 let currentQuestionIndex = 0;
 let questions = [];
+let isYesNoMode = false; // Yes/No style mode flag
 
 // MBTI Scores: positive = left side (E, S, T, J), negative = right side (I, N, F, P)
 let mbtiScores = {
@@ -41,6 +42,11 @@ function startTest(testType) {
     mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 };
     enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
     instinctScores = { SP: 0, SO: 0, SX: 0 };
+    isYesNoMode = false; // Reset mode
+
+    // Reset answer buttons visibility
+    document.getElementById('answer-options').style.display = 'flex';
+    document.getElementById('answer-options-yesno').style.display = 'none';
 
     // Hide all visualizations first
     document.getElementById('mbti-viz').style.display = 'none';
@@ -75,6 +81,17 @@ function startTest(testType) {
         currentPhase = 'mbti';
         document.getElementById('test-type-badge').textContent = 'MBTI';
         document.getElementById('mbti-viz').style.display = 'block';
+    } else if (testType === 'mbti-yesno') {
+        // MBTI Yes/No Quick Test
+        questions = [...MBTI_QUESTIONS];
+        currentPhase = 'mbti';
+        isYesNoMode = true;
+        document.getElementById('test-type-badge').textContent = 'MBTI ⚡';
+        document.getElementById('mbti-viz').style.display = 'block';
+
+        // Switch to Yes/No answer buttons
+        document.getElementById('answer-options').style.display = 'none';
+        document.getElementById('answer-options-yesno').style.display = 'flex';
     }
 
     // Update UI
@@ -158,8 +175,15 @@ function selectAnswer(answerIndex) {
 }
 
 function applyMBTIScore(question, answerIndex) {
-    // weights: [2, 1, 0, -1, -2] for 매우 그렇다 → 매우 아니다
-    let score = question.weights[answerIndex];
+    let score;
+
+    if (isYesNoMode) {
+        // Yes/No style: Yes = 2, No = -2
+        score = answerIndex === 0 ? 2 : -2;
+    } else {
+        // Original 5-choice style: weights from question
+        score = question.weights[answerIndex];
+    }
 
     // If question direction is for the right side (I, N, F, P), flip the score
     if (question.direction === 'I' || question.direction === 'N' ||
@@ -171,7 +195,15 @@ function applyMBTIScore(question, answerIndex) {
 }
 
 function applyEnneagramScore(question, answerIndex) {
-    const weight = question.weights[answerIndex];
+    let weight;
+
+    if (isYesNoMode) {
+        // Yes/No style: Yes = 1, No = 0
+        weight = answerIndex === 0 ? 1 : 0;
+    } else {
+        // Original 5-choice style
+        weight = question.weights[answerIndex];
+    }
 
     // Apply scores to each type affected by this question
     for (const [type, baseScore] of Object.entries(question.scores)) {
@@ -180,7 +212,15 @@ function applyEnneagramScore(question, answerIndex) {
 }
 
 function applyInstinctScore(question, answerIndex) {
-    const weight = question.weights[answerIndex];
+    let weight;
+
+    if (isYesNoMode) {
+        // Yes/No style: Yes = 1, No = 0
+        weight = answerIndex === 0 ? 1 : 0;
+    } else {
+        // Original 5-choice style
+        weight = question.weights[answerIndex];
+    }
 
     // Apply scores to each instinct type affected by this question
     for (const [instinct, baseScore] of Object.entries(question.scores)) {
@@ -393,7 +433,7 @@ function updateInstinctVisualization() {
 // ===== Results =====
 function showResults() {
     // Prepare result cards
-    const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete';
+    const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
     const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
 
@@ -679,7 +719,7 @@ function getEnneagramType() {
 function shareResult() {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
 
-    if (currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete') {
+    if (currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno') {
         const mbtiType = document.getElementById('result-mbti-type').textContent;
         const mbtiName = document.getElementById('result-mbti-name').textContent;
         shareText += `📊 MBTI: ${mbtiType} (${mbtiName})\n`;
@@ -731,8 +771,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (document.getElementById('test-screen').classList.contains('active')) {
-            if (e.key >= '1' && e.key <= '5') {
-                selectAnswer(parseInt(e.key) - 1);
+            const key = e.key.toLowerCase();
+
+            if (isYesNoMode) {
+                // Yes/No style: Y/N or 1/2
+                if (key === 'y' || key === '1') {
+                    selectAnswer(0); // Yes
+                } else if (key === 'n' || key === '2') {
+                    selectAnswer(1); // No
+                }
+            } else {
+                // Original 5-choice style: 1-5
+                if (e.key >= '1' && e.key <= '5') {
+                    selectAnswer(parseInt(e.key) - 1);
+                }
             }
         }
     });

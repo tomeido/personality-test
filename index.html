@@ -109,6 +109,22 @@
                         </div>
                     </div>
                 </button>
+
+                <button class="test-card full-test yesno-test" onclick="startTest('mbti-yesno')">
+                    <div class="card-glow yesno-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">⚡</div>
+                        <h2>MBTI 빠른 테스트</h2>
+                        <p>YES / NO 선택으로 더 빠르게! 직관적인 이분법 테스트</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 2분</span>
+                            <span>📝 20문항</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>👍 YES</span><span>👎 NO</span>
+                        </div>
+                    </div>
+                </button>
             </div>
         </div>
 
@@ -168,6 +184,18 @@
                     <button class="answer-btn" onclick="selectAnswer(4)">
                         <span class="answer-icon">😌</span>
                         <span class="answer-text">매우 아니다</span>
+                    </button>
+                </div>
+
+                <!-- Yes/No Style (hidden by default) -->
+                <div class="answer-options yes-no-style" id="answer-options-yesno" style="display: none;">
+                    <button class="answer-btn yes-btn" onclick="selectAnswer(0)">
+                        <span class="answer-icon">👍</span>
+                        <span class="answer-text">YES</span>
+                    </button>
+                    <button class="answer-btn no-btn" onclick="selectAnswer(1)">
+                        <span class="answer-icon">👎</span>
+                        <span class="answer-text">NO</span>
                     </button>
                 </div>
             </div>
