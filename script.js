@@ -629,26 +629,22 @@ function displaySimilarPeople(showMBTI, showEnneagram) {
             html += `<div class="similar-people-grid">`;
 
             // Add celebrities
-            mbtiData.celebrities.slice(0, 2).forEach(person => {
-                html += `
+            html += mbtiData.celebrities.slice(0, 2).map(person => `
                     <div class="similar-person-card">
                         <div class="similar-person-image">${person.image}</div>
                         <div class="similar-person-name">${person.name}</div>
                         <span class="similar-person-category">${person.category}</span>
                     </div>
-                `;
-            });
+                `).join('');
 
             // Add characters
-            mbtiData.characters.slice(0, 2).forEach(char => {
-                html += `
+            html += mbtiData.characters.slice(0, 2).map(char => `
                     <div class="similar-person-card">
                         <div class="similar-person-image">${char.image}</div>
                         <div class="similar-person-name">${char.name}</div>
                         <div class="similar-person-work">${char.work}</div>
                     </div>
-                `;
-            });
+                `).join('');
 
             html += `</div></div>`;
         }
@@ -665,26 +661,22 @@ function displaySimilarPeople(showMBTI, showEnneagram) {
             html += `<div class="similar-people-grid">`;
 
             // Add celebrities
-            enneaData.celebrities.slice(0, 2).forEach(person => {
-                html += `
+            html += enneaData.celebrities.slice(0, 2).map(person => `
                     <div class="similar-person-card">
                         <div class="similar-person-image">${person.image}</div>
                         <div class="similar-person-name">${person.name}</div>
                         <span class="similar-person-category">${person.category}</span>
                     </div>
-                `;
-            });
+                `).join('');
 
             // Add characters
-            enneaData.characters.slice(0, 2).forEach(char => {
-                html += `
+            html += enneaData.characters.slice(0, 2).map(char => `
                     <div class="similar-person-card">
                         <div class="similar-person-image">${char.image}</div>
                         <div class="similar-person-name">${char.name}</div>
                         <div class="similar-person-work">${char.work}</div>
                     </div>
-                `;
-            });
+                `).join('');
 
             html += `</div></div>`;
         }
