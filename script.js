@@ -26,8 +26,12 @@ let instinctScores = {
 };
 
 // ===== Screen Management =====
+let cachedScreens = null;
 function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
+    if (!cachedScreens) {
+        cachedScreens = document.querySelectorAll('.screen');
+    }
+    cachedScreens.forEach(screen => {
         screen.classList.remove('active');
     });
     document.getElementById(screenId).classList.add('active');
