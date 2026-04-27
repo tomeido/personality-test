@@ -334,7 +334,24 @@ function updateMBTIVisualization() {
     document.getElementById('current-mbti-type').textContent = mbtiType || '----';
 }
 
+let enneaDOMCache = null;
+
 function updateEnneagramVisualization() {
+    // Lazy initialize DOM cache
+    if (typeof document !== 'undefined' && !enneaDOMCache) {
+        enneaDOMCache = {
+            fills: {},
+            percents: {},
+            barItems: {},
+            currentType: document.getElementById('current-enneagram-type')
+        };
+        for (let i = 1; i <= 9; i++) {
+            enneaDOMCache.fills[i] = document.getElementById(`ennea-${i}-fill`);
+            enneaDOMCache.percents[i] = document.getElementById(`ennea-${i}-percent`);
+            enneaDOMCache.barItems[i] = document.querySelector(`.ennea-bar-item[data-type="${i}"]`);
+        }
+    }
+
     // Find max score for normalization
     const maxScore = Math.max(...Object.values(enneagramScores), 1);
 
@@ -346,16 +363,16 @@ function updateEnneagramVisualization() {
         const score = enneagramScores[i];
         const percent = (score / maxScore) * 100;
 
-        // Update bar
-        const fill = document.getElementById(`ennea-${i}-fill`);
-        fill.style.width = `${percent}%`;
+        if (enneaDOMCache) {
+            // Update bar
+            enneaDOMCache.fills[i].style.width = `${percent}%`;
 
-        // Update percentage display
-        document.getElementById(`ennea-${i}-percent`).textContent = `${Math.round(percent)}%`;
+            // Update percentage display
+            enneaDOMCache.percents[i].textContent = `${Math.round(percent)}%`;
 
-        // Update leading class
-        const barItem = document.querySelector(`.ennea-bar-item[data-type="${i}"]`);
-        barItem.classList.remove('leading');
+            // Update leading class
+            enneaDOMCache.barItems[i].classList.remove('leading');
+        }
 
         if (score > leadingScore) {
             leadingScore = score;
@@ -363,12 +380,14 @@ function updateEnneagramVisualization() {
         }
     }
 
-    // Mark leading type
-    document.querySelector(`.ennea-bar-item[data-type="${leadingType}"]`).classList.add('leading');
+    if (enneaDOMCache) {
+        // Mark leading type
+        enneaDOMCache.barItems[leadingType].classList.add('leading');
 
-    // Update current type display
-    const typeName = ENNEAGRAM_TYPES[leadingType].name;
-    document.getElementById('current-enneagram-type').textContent = `${leadingType}번 ${typeName}`;
+        // Update current type display
+        const typeName = ENNEAGRAM_TYPES[leadingType].name;
+        enneaDOMCache.currentType.textContent = `${leadingType}번 ${typeName}`;
+    }
 }
 
 function updateInstinctVisualization() {
