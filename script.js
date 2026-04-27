@@ -506,13 +506,28 @@ function displayMBTIResult() {
 
     const typeInfo = MBTI_TYPES[mbtiType];
     if (typeInfo) {
-        document.getElementById('result-mbti-description').innerHTML = `
-            <p>${typeInfo.description}</p>
-            <h4>💪 강점</h4>
-            <p>${typeInfo.strengths}</p>
-            <h4>🎯 도전 과제</h4>
-            <p>${typeInfo.challenges}</p>
-        `;
+        const container = document.getElementById('result-mbti-description');
+        container.innerHTML = '';
+
+        const descP = document.createElement('p');
+        descP.textContent = typeInfo.description;
+        container.appendChild(descP);
+
+        const strengthsH4 = document.createElement('h4');
+        strengthsH4.textContent = '💪 강점';
+        container.appendChild(strengthsH4);
+
+        const strengthsP = document.createElement('p');
+        strengthsP.textContent = typeInfo.strengths;
+        container.appendChild(strengthsP);
+
+        const challengesH4 = document.createElement('h4');
+        challengesH4.textContent = '🎯 도전 과제';
+        container.appendChild(challengesH4);
+
+        const challengesP = document.createElement('p');
+        challengesP.textContent = typeInfo.challenges;
+        container.appendChild(challengesP);
     }
 }
 
