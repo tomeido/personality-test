@@ -793,5 +793,5 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { shuffleArray };
+    module.exports = { shuffleArray, getMBTIType, mbtiScores };
 }
