@@ -583,12 +583,27 @@ function displayInstinctResult() {
         const subtypeInfo = SUBTYPE_DESCRIPTIONS[subtypeKey];
 
         if (subtypeInfo && currentTest === 'complete') {
-            document.getElementById('result-subtype').innerHTML = `
-                <h4>에니어그램 하위유형</h4>
-                <div class="subtype-name">${enneaType}${mainInstinct}: ${subtypeInfo.name}</div>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">${subtypeInfo.description}</p>
-            `;
-            document.getElementById('result-subtype').style.display = 'block';
+            const subtypeContainer = document.getElementById('result-subtype');
+            subtypeContainer.innerHTML = ''; // Clear previous content
+
+            const h4 = document.createElement('h4');
+            h4.textContent = '에니어그램 하위유형';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'subtype-name';
+            nameDiv.textContent = `${enneaType}${mainInstinct}: ${subtypeInfo.name}`;
+
+            const descP = document.createElement('p');
+            descP.style.fontSize = '0.9rem';
+            descP.style.color = 'var(--text-secondary)';
+            descP.style.marginTop = '8px';
+            descP.textContent = subtypeInfo.description;
+
+            subtypeContainer.appendChild(h4);
+            subtypeContainer.appendChild(nameDiv);
+            subtypeContainer.appendChild(descP);
+
+            subtypeContainer.style.display = 'block';
         } else {
             document.getElementById('result-subtype').style.display = 'none';
         }
