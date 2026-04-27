@@ -912,6 +912,10 @@ if (typeof module !== 'undefined' && module.exports) {
         shuffleArray,
         getEnneagramType,
         setEnneagramScores: (scores) => { enneagramScores = scores; },
-        resetEnneagramScores: () => { enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }; }
+        resetEnneagramScores: () => { enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }; },
+        applyMBTIScore,
+        getMbtiScores: () => mbtiScores,
+        setIsYesNoMode: (val) => { isYesNoMode = val; },
+        resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; }
     };
 }
