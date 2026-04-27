@@ -765,27 +765,33 @@ function shuffleArray(array) {
 }
 
 // ===== Initialize =====
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Personality Test App Initialized');
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Personality Test App Initialized');
 
-    // Add keyboard navigation
-    document.addEventListener('keydown', (e) => {
-        if (document.getElementById('test-screen').classList.contains('active')) {
-            const key = e.key.toLowerCase();
+        // Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('test-screen').classList.contains('active')) {
+                const key = e.key.toLowerCase();
 
-            if (isYesNoMode) {
-                // Yes/No style: Y/N or 1/2
-                if (key === 'y' || key === '1') {
-                    selectAnswer(0); // Yes
-                } else if (key === 'n' || key === '2') {
-                    selectAnswer(1); // No
-                }
-            } else {
-                // Original 5-choice style: 1-5
-                if (e.key >= '1' && e.key <= '5') {
-                    selectAnswer(parseInt(e.key) - 1);
+                if (isYesNoMode) {
+                    // Yes/No style: Y/N or 1/2
+                    if (key === 'y' || key === '1') {
+                        selectAnswer(0); // Yes
+                    } else if (key === 'n' || key === '2') {
+                        selectAnswer(1); // No
+                    }
+                } else {
+                    // Original 5-choice style: 1-5
+                    if (e.key >= '1' && e.key <= '5') {
+                        selectAnswer(parseInt(e.key) - 1);
+                    }
                 }
             }
-        }
+        });
     });
-});
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { shuffleArray };
+}
