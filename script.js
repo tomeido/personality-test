@@ -534,21 +534,54 @@ function displayEnneagramResult() {
     document.getElementById('result-enneagram-type').textContent = mainType;
     document.getElementById('result-enneagram-name').textContent = typeInfo.name;
 
-    document.getElementById('result-wing').innerHTML = `
-        <p>🪽 날개: <strong>${mainType}w${wing}</strong> (${typeInfo.name} + ${ENNEAGRAM_TYPES[wing].name} 성향)</p>
-    `;
+    const wingResult = document.getElementById('result-wing');
+    wingResult.innerHTML = '';
+    const wingP = document.createElement('p');
+    wingP.textContent = '🪽 날개: ';
+    const wingStrong = document.createElement('strong');
+    wingStrong.textContent = `${mainType}w${wing}`;
+    wingP.appendChild(wingStrong);
+    wingP.appendChild(document.createTextNode(` (${typeInfo.name} + ${ENNEAGRAM_TYPES[wing].name} 성향)`));
+    wingResult.appendChild(wingP);
 
-    document.getElementById('result-enneagram-description').innerHTML = `
-        <p>${typeInfo.description}</p>
-        <h4>💫 핵심 욕구</h4>
-        <p>${typeInfo.coreDesire}</p>
-        <h4>😰 핵심 두려움</h4>
-        <p>${typeInfo.coreFear}</p>
-        <h4>💪 강점</h4>
-        <p>${typeInfo.strengths}</p>
-        <h4>🌱 성장 포인트</h4>
-        <p>${typeInfo.growth}</p>
-    `;
+    const descriptionResult = document.getElementById('result-enneagram-description');
+    descriptionResult.innerHTML = '';
+
+    const descP = document.createElement('p');
+    descP.textContent = typeInfo.description;
+    descriptionResult.appendChild(descP);
+
+    const desireH4 = document.createElement('h4');
+    desireH4.textContent = '💫 핵심 욕구';
+    descriptionResult.appendChild(desireH4);
+
+    const desireP = document.createElement('p');
+    desireP.textContent = typeInfo.coreDesire;
+    descriptionResult.appendChild(desireP);
+
+    const fearH4 = document.createElement('h4');
+    fearH4.textContent = '😰 핵심 두려움';
+    descriptionResult.appendChild(fearH4);
+
+    const fearP = document.createElement('p');
+    fearP.textContent = typeInfo.coreFear;
+    descriptionResult.appendChild(fearP);
+
+    const strengthsH4 = document.createElement('h4');
+    strengthsH4.textContent = '💪 강점';
+    descriptionResult.appendChild(strengthsH4);
+
+    const strengthsP = document.createElement('p');
+    strengthsP.textContent = typeInfo.strengths;
+    descriptionResult.appendChild(strengthsP);
+
+    const growthH4 = document.createElement('h4');
+    growthH4.textContent = '🌱 성장 포인트';
+    descriptionResult.appendChild(growthH4);
+
+    const growthP = document.createElement('p');
+    growthP.textContent = typeInfo.growth;
+    descriptionResult.appendChild(growthP);
 }
 
 function displayInstinctResult() {
