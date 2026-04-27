@@ -680,6 +680,39 @@ function displayInstinctResult() {
     });
 }
 
+function generateSimilarPeopleHTML(typeData, label) {
+    if (!typeData) return '';
+
+    let html = `<div class="similar-people-type-group">`;
+    html += `<div class="similar-people-type-label">${label}</div>`;
+    html += `<div class="similar-people-grid">`;
+
+    // Add celebrities
+    typeData.celebrities.slice(0, 2).forEach(person => {
+        html += `
+            <div class="similar-person-card">
+                <div class="similar-person-image">${person.image}</div>
+                <div class="similar-person-name">${person.name}</div>
+                <span class="similar-person-category">${person.category}</span>
+            </div>
+        `;
+    });
+
+    // Add characters
+    typeData.characters.slice(0, 2).forEach(char => {
+        html += `
+            <div class="similar-person-card">
+                <div class="similar-person-image">${char.image}</div>
+                <div class="similar-person-name">${char.name}</div>
+                <div class="similar-person-work">${char.work}</div>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`;
+    return html;
+}
+
 function displaySimilarPeople(showMBTI, showEnneagram) {
     const similarSection = document.getElementById('similar-people-section');
     const similarGrid = document.getElementById('similar-people-grid');
