@@ -605,6 +605,39 @@ function displayInstinctResult() {
     `;
 }
 
+function generateSimilarPeopleHTML(typeData, label) {
+    if (!typeData) return '';
+
+    let html = `<div class="similar-people-type-group">`;
+    html += `<div class="similar-people-type-label">${label}</div>`;
+    html += `<div class="similar-people-grid">`;
+
+    // Add celebrities
+    typeData.celebrities.slice(0, 2).forEach(person => {
+        html += `
+            <div class="similar-person-card">
+                <div class="similar-person-image">${person.image}</div>
+                <div class="similar-person-name">${person.name}</div>
+                <span class="similar-person-category">${person.category}</span>
+            </div>
+        `;
+    });
+
+    // Add characters
+    typeData.characters.slice(0, 2).forEach(char => {
+        html += `
+            <div class="similar-person-card">
+                <div class="similar-person-image">${char.image}</div>
+                <div class="similar-person-name">${char.name}</div>
+                <div class="similar-person-work">${char.work}</div>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`;
+    return html;
+}
+
 function displaySimilarPeople(showMBTI, showEnneagram) {
     const similarSection = document.getElementById('similar-people-section');
     const similarGrid = document.getElementById('similar-people-grid');
@@ -622,72 +655,14 @@ function displaySimilarPeople(showMBTI, showEnneagram) {
     if (showMBTI) {
         const mbtiType = getMBTIType();
         const mbtiData = PDB_DATA.mbti[mbtiType];
-
-        if (mbtiData) {
-            html += `<div class="similar-people-type-group">`;
-            html += `<div class="similar-people-type-label">🎭 ${mbtiType} 유형</div>`;
-            html += `<div class="similar-people-grid">`;
-
-            // Add celebrities
-            mbtiData.celebrities.slice(0, 2).forEach(person => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${person.image}</div>
-                        <div class="similar-person-name">${person.name}</div>
-                        <span class="similar-person-category">${person.category}</span>
-                    </div>
-                `;
-            });
-
-            // Add characters
-            mbtiData.characters.slice(0, 2).forEach(char => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${char.image}</div>
-                        <div class="similar-person-name">${char.name}</div>
-                        <div class="similar-person-work">${char.work}</div>
-                    </div>
-                `;
-            });
-
-            html += `</div></div>`;
-        }
+        html += generateSimilarPeopleHTML(mbtiData, `🎭 ${mbtiType} 유형`);
     }
 
     // Get Enneagram matches
     if (showEnneagram) {
         const enneaType = getEnneagramType();
         const enneaData = PDB_DATA.enneagram[enneaType];
-
-        if (enneaData) {
-            html += `<div class="similar-people-type-group">`;
-            html += `<div class="similar-people-type-label">💜 ${enneaType}번 유형</div>`;
-            html += `<div class="similar-people-grid">`;
-
-            // Add celebrities
-            enneaData.celebrities.slice(0, 2).forEach(person => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${person.image}</div>
-                        <div class="similar-person-name">${person.name}</div>
-                        <span class="similar-person-category">${person.category}</span>
-                    </div>
-                `;
-            });
-
-            // Add characters
-            enneaData.characters.slice(0, 2).forEach(char => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${char.image}</div>
-                        <div class="similar-person-name">${char.name}</div>
-                        <div class="similar-person-work">${char.work}</div>
-                    </div>
-                `;
-            });
-
-            html += `</div></div>`;
-        }
+        html += generateSimilarPeopleHTML(enneaData, `💜 ${enneaType}번 유형`);
     }
 
     similarGrid.innerHTML = html;
