@@ -475,44 +475,80 @@ function displayMBTIResult() {
     let mbtiType = '';
     let axesHTML = '';
 
+    const axesEl = document.getElementById('result-mbti-axes');
+    axesEl.innerHTML = '';
+
     axes.forEach((axis, index) => {
         const score = mbtiScores[axis];
         const leftPercent = Math.min(100, Math.max(0, 50 + (score / maxScore) * 50));
         const rightPercent = 100 - leftPercent;
 
         const isLeft = leftPercent >= 50;
-        mbtiType += isLeft ? leftLetters[index] : rightLetters[index];
+        const currentLetter = isLeft ? leftLetters[index] : rightLetters[index];
+        const currentName = isLeft ? leftNames[index] : rightNames[index];
+        mbtiType += currentLetter;
 
         const color = isLeft
             ? `var(--color-${leftLetters[index].toLowerCase()})`
             : `var(--color-${rightLetters[index].toLowerCase()})`;
 
-        axesHTML += `
-            <div class="result-axis">
-                <span class="result-axis-label" style="color: ${color}">
-                    ${isLeft ? leftLetters[index] : rightLetters[index]} ${isLeft ? leftNames[index] : rightNames[index]}
-                </span>
-                <div class="result-axis-bar">
-                    <div class="result-axis-fill" style="width: ${isLeft ? leftPercent : rightPercent}%; background: ${color}"></div>
-                </div>
-                <span class="result-axis-value">${Math.round(isLeft ? leftPercent : rightPercent)}%</span>
-            </div>
-        `;
+        const axisDiv = document.createElement('div');
+        axisDiv.className = 'result-axis';
+
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'result-axis-label';
+        labelSpan.style.color = color;
+        labelSpan.textContent = `${currentLetter} ${currentName}`;
+
+        const barDiv = document.createElement('div');
+        barDiv.className = 'result-axis-bar';
+
+        const fillDiv = document.createElement('div');
+        fillDiv.className = 'result-axis-fill';
+        fillDiv.style.width = `${isLeft ? leftPercent : rightPercent}%`;
+        fillDiv.style.background = color;
+
+        barDiv.appendChild(fillDiv);
+
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'result-axis-value';
+        valueSpan.textContent = `${Math.round(isLeft ? leftPercent : rightPercent)}%`;
+
+        axisDiv.appendChild(labelSpan);
+        axisDiv.appendChild(barDiv);
+        axisDiv.appendChild(valueSpan);
+
+        axesEl.appendChild(axisDiv);
     });
 
     document.getElementById('result-mbti-type').textContent = mbtiType;
     document.getElementById('result-mbti-name').textContent = MBTI_TYPES[mbtiType]?.name || '';
-    document.getElementById('result-mbti-axes').innerHTML = axesHTML;
 
     const typeInfo = MBTI_TYPES[mbtiType];
     if (typeInfo) {
-        document.getElementById('result-mbti-description').innerHTML = `
-            <p>${typeInfo.description}</p>
-            <h4>💪 강점</h4>
-            <p>${typeInfo.strengths}</p>
-            <h4>🎯 도전 과제</h4>
-            <p>${typeInfo.challenges}</p>
-        `;
+        const descEl = document.getElementById('result-mbti-description');
+        descEl.innerHTML = '';
+
+        const pDesc = document.createElement('p');
+        pDesc.textContent = typeInfo.description;
+
+        const h4Strengths = document.createElement('h4');
+        h4Strengths.textContent = '💪 강점';
+
+        const pStrengths = document.createElement('p');
+        pStrengths.textContent = typeInfo.strengths;
+
+        const h4Challenges = document.createElement('h4');
+        h4Challenges.textContent = '🎯 도전 과제';
+
+        const pChallenges = document.createElement('p');
+        pChallenges.textContent = typeInfo.challenges;
+
+        descEl.appendChild(pDesc);
+        descEl.appendChild(h4Strengths);
+        descEl.appendChild(pStrengths);
+        descEl.appendChild(h4Challenges);
+        descEl.appendChild(pChallenges);
     }
 }
 
@@ -534,54 +570,32 @@ function displayEnneagramResult() {
     document.getElementById('result-enneagram-type').textContent = mainType;
     document.getElementById('result-enneagram-name').textContent = typeInfo.name;
 
-    const wingResult = document.getElementById('result-wing');
-    wingResult.innerHTML = '';
-    const wingP = document.createElement('p');
-    wingP.textContent = '🪽 날개: ';
-    const wingStrong = document.createElement('strong');
-    wingStrong.textContent = `${mainType}w${wing}`;
-    wingP.appendChild(wingStrong);
-    wingP.appendChild(document.createTextNode(` (${typeInfo.name} + ${ENNEAGRAM_TYPES[wing].name} 성향)`));
-    wingResult.appendChild(wingP);
+    const wingEl = document.getElementById('result-wing');
+    wingEl.innerHTML = '';
+    const pWing = document.createElement('p');
+    pWing.innerHTML = `🪽 날개: <strong>${mainType}w${wing}</strong> (${escapeHTML(typeInfo.name)} + ${escapeHTML(ENNEAGRAM_TYPES[wing].name)} 성향)`;
+    wingEl.appendChild(pWing);
 
-    const descriptionResult = document.getElementById('result-enneagram-description');
-    descriptionResult.innerHTML = '';
+    const enneaDescEl = document.getElementById('result-enneagram-description');
+    enneaDescEl.innerHTML = '';
 
-    const descP = document.createElement('p');
-    descP.textContent = typeInfo.description;
-    descriptionResult.appendChild(descP);
+    const sections = [
+        { tag: 'p', text: typeInfo.description },
+        { tag: 'h4', text: '💫 핵심 욕구' },
+        { tag: 'p', text: typeInfo.coreDesire },
+        { tag: 'h4', text: '😰 핵심 두려움' },
+        { tag: 'p', text: typeInfo.coreFear },
+        { tag: 'h4', text: '💪 강점' },
+        { tag: 'p', text: typeInfo.strengths },
+        { tag: 'h4', text: '🌱 성장 포인트' },
+        { tag: 'p', text: typeInfo.growth }
+    ];
 
-    const desireH4 = document.createElement('h4');
-    desireH4.textContent = '💫 핵심 욕구';
-    descriptionResult.appendChild(desireH4);
-
-    const desireP = document.createElement('p');
-    desireP.textContent = typeInfo.coreDesire;
-    descriptionResult.appendChild(desireP);
-
-    const fearH4 = document.createElement('h4');
-    fearH4.textContent = '😰 핵심 두려움';
-    descriptionResult.appendChild(fearH4);
-
-    const fearP = document.createElement('p');
-    fearP.textContent = typeInfo.coreFear;
-    descriptionResult.appendChild(fearP);
-
-    const strengthsH4 = document.createElement('h4');
-    strengthsH4.textContent = '💪 강점';
-    descriptionResult.appendChild(strengthsH4);
-
-    const strengthsP = document.createElement('p');
-    strengthsP.textContent = typeInfo.strengths;
-    descriptionResult.appendChild(strengthsP);
-
-    const growthH4 = document.createElement('h4');
-    growthH4.textContent = '🌱 성장 포인트';
-    descriptionResult.appendChild(growthH4);
-
-    const growthP = document.createElement('p');
-    growthP.textContent = typeInfo.growth;
-    descriptionResult.appendChild(growthP);
+    sections.forEach(sec => {
+        const el = document.createElement(sec.tag);
+        el.textContent = sec.text;
+        enneaDescEl.appendChild(el);
+    });
 }
 
 function displayInstinctResult() {
@@ -600,42 +614,103 @@ function displayInstinctResult() {
     document.getElementById('result-instinct-name').textContent = instinctInfo.name;
 
     // Display instinct stacking
-    document.getElementById('result-instinct-stack').innerHTML = `
-        <h4>본능 스태킹 순서</h4>
-        <div class="instinct-stack-order">
-            <span>${INSTINCT_TYPES[mainInstinct].emoji} ${mainInstinct}</span>
-            <span>${INSTINCT_TYPES[secondInstinct].emoji} ${secondInstinct}</span>
-            <span>${INSTINCT_TYPES[thirdInstinct].emoji} ${thirdInstinct}</span>
-        </div>
-    `;
+    const stackEl = document.getElementById('result-instinct-stack');
+    stackEl.innerHTML = '';
+    const h4Stack = document.createElement('h4');
+    h4Stack.textContent = '본능 스태킹 순서';
+    stackEl.appendChild(h4Stack);
+
+    const stackOrderDiv = document.createElement('div');
+    stackOrderDiv.className = 'instinct-stack-order';
+
+    [mainInstinct, secondInstinct, thirdInstinct].forEach(ins => {
+        const span = document.createElement('span');
+        span.textContent = `${INSTINCT_TYPES[ins].emoji} ${ins}`;
+        stackOrderDiv.appendChild(span);
+    });
+    stackEl.appendChild(stackOrderDiv);
 
     // If we also have enneagram, show subtype
-    if (currentTest === 'complete' || currentTest === 'instinct') {
+    const subtypeEl = document.getElementById('result-subtype');
+    if (currentTest === 'complete') {
         const enneaType = getEnneagramType();
         const subtypeKey = `${enneaType}${mainInstinct}`;
         const subtypeInfo = SUBTYPE_DESCRIPTIONS[subtypeKey];
 
-        if (subtypeInfo && currentTest === 'complete') {
-            document.getElementById('result-subtype').innerHTML = `
-                <h4>에니어그램 하위유형</h4>
-                <div class="subtype-name">${enneaType}${mainInstinct}: ${subtypeInfo.name}</div>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">${subtypeInfo.description}</p>
-            `;
-            document.getElementById('result-subtype').style.display = 'block';
+        if (subtypeInfo) {
+            subtypeEl.innerHTML = '';
+            const h4Subtype = document.createElement('h4');
+            h4Subtype.textContent = '에니어그램 하위유형';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'subtype-name';
+            nameDiv.textContent = `${enneaType}${mainInstinct}: ${subtypeInfo.name}`;
+
+            const pSubtypeDesc = document.createElement('p');
+            pSubtypeDesc.style.cssText = 'font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;';
+            pSubtypeDesc.textContent = subtypeInfo.description;
+
+            subtypeEl.appendChild(h4Subtype);
+            subtypeEl.appendChild(nameDiv);
+            subtypeEl.appendChild(pSubtypeDesc);
+            subtypeEl.style.display = 'block';
         } else {
-            document.getElementById('result-subtype').style.display = 'none';
+            subtypeEl.style.display = 'none';
         }
+    } else {
+        subtypeEl.style.display = 'none';
     }
 
-    document.getElementById('result-instinct-description').innerHTML = `
-        <p>${instinctInfo.description}</p>
-        <h4>🎯 주요 관심사</h4>
-        <p>${instinctInfo.focus.join(', ')}</p>
-        <h4>💪 강점</h4>
-        <p>${instinctInfo.strengths}</p>
-        <h4>⚠️ 주의점</h4>
-        <p>${instinctInfo.challenges}</p>
-    `;
+    const instinctDescEl = document.getElementById('result-instinct-description');
+    instinctDescEl.innerHTML = '';
+    const insSections = [
+        { tag: 'p', text: instinctInfo.description },
+        { tag: 'h4', text: '🎯 주요 관심사' },
+        { tag: 'p', text: instinctInfo.focus.join(', ') },
+        { tag: 'h4', text: '💪 강점' },
+        { tag: 'p', text: instinctInfo.strengths },
+        { tag: 'h4', text: '⚠️ 주의점' },
+        { tag: 'p', text: instinctInfo.challenges }
+    ];
+
+    insSections.forEach(sec => {
+        const el = document.createElement(sec.tag);
+        el.textContent = sec.text;
+        instinctDescEl.appendChild(el);
+    });
+}
+
+function generateSimilarPeopleHTML(typeData, label) {
+    if (!typeData) return '';
+
+    let html = `<div class="similar-people-type-group">`;
+    html += `<div class="similar-people-type-label">${label}</div>`;
+    html += `<div class="similar-people-grid">`;
+
+    // Add celebrities
+    typeData.celebrities.slice(0, 2).forEach(person => {
+        html += `
+            <div class="similar-person-card">
+                <div class="similar-person-image">${person.image}</div>
+                <div class="similar-person-name">${person.name}</div>
+                <span class="similar-person-category">${person.category}</span>
+            </div>
+        `;
+    });
+
+    // Add characters
+    typeData.characters.slice(0, 2).forEach(char => {
+        html += `
+            <div class="similar-person-card">
+                <div class="similar-person-image">${char.image}</div>
+                <div class="similar-person-name">${char.name}</div>
+                <div class="similar-person-work">${char.work}</div>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`;
+    return html;
 }
 
 function displaySimilarPeople(showMBTI, showEnneagram) {
@@ -648,42 +723,68 @@ function displaySimilarPeople(showMBTI, showEnneagram) {
     }
 
     similarSection.style.display = 'block';
+    similarGrid.innerHTML = ''; // Clear existing content
 
-    let html = '';
+    const createPersonCard = (person, type) => {
+        const card = document.createElement('div');
+        card.className = 'similar-person-card';
+
+        const image = document.createElement('div');
+        image.className = 'similar-person-image';
+        image.textContent = person.image;
+
+        const name = document.createElement('div');
+        name.className = 'similar-person-name';
+        name.textContent = person.name;
+
+        card.appendChild(image);
+        card.appendChild(name);
+
+        if (type === 'celebrity') {
+            const category = document.createElement('span');
+            category.className = 'similar-person-category';
+            category.textContent = person.category;
+            card.appendChild(category);
+        } else {
+            const work = document.createElement('div');
+            work.className = 'similar-person-work';
+            work.textContent = person.work;
+            card.appendChild(work);
+        }
+
+        return card;
+    };
+
+    const createTypeGroup = (label, data) => {
+        const group = document.createElement('div');
+        group.className = 'similar-people-type-group';
+
+        const groupLabel = document.createElement('div');
+        groupLabel.className = 'similar-people-type-label';
+        groupLabel.textContent = label;
+        group.appendChild(groupLabel);
+
+        const grid = document.createElement('div');
+        grid.className = 'similar-people-grid';
+
+        data.celebrities.slice(0, 2).forEach(person => {
+            grid.appendChild(createPersonCard(person, 'celebrity'));
+        });
+
+        data.characters.slice(0, 2).forEach(char => {
+            grid.appendChild(createPersonCard(char, 'character'));
+        });
+
+        group.appendChild(grid);
+        return group;
+    };
 
     // Get MBTI matches
     if (showMBTI) {
         const mbtiType = getMBTIType();
         const mbtiData = PDB_DATA.mbti[mbtiType];
-
         if (mbtiData) {
-            html += `<div class="similar-people-type-group">`;
-            html += `<div class="similar-people-type-label">🎭 ${mbtiType} 유형</div>`;
-            html += `<div class="similar-people-grid">`;
-
-            // Add celebrities
-            mbtiData.celebrities.slice(0, 2).forEach(person => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${person.image}</div>
-                        <div class="similar-person-name">${person.name}</div>
-                        <span class="similar-person-category">${person.category}</span>
-                    </div>
-                `;
-            });
-
-            // Add characters
-            mbtiData.characters.slice(0, 2).forEach(char => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${char.image}</div>
-                        <div class="similar-person-name">${char.name}</div>
-                        <div class="similar-person-work">${char.work}</div>
-                    </div>
-                `;
-            });
-
-            html += `</div></div>`;
+            similarGrid.appendChild(createTypeGroup(`🎭 ${mbtiType} 유형`, mbtiData));
         }
     }
 
@@ -691,39 +792,10 @@ function displaySimilarPeople(showMBTI, showEnneagram) {
     if (showEnneagram) {
         const enneaType = getEnneagramType();
         const enneaData = PDB_DATA.enneagram[enneaType];
-
         if (enneaData) {
-            html += `<div class="similar-people-type-group">`;
-            html += `<div class="similar-people-type-label">💜 ${enneaType}번 유형</div>`;
-            html += `<div class="similar-people-grid">`;
-
-            // Add celebrities
-            enneaData.celebrities.slice(0, 2).forEach(person => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${person.image}</div>
-                        <div class="similar-person-name">${person.name}</div>
-                        <span class="similar-person-category">${person.category}</span>
-                    </div>
-                `;
-            });
-
-            // Add characters
-            enneaData.characters.slice(0, 2).forEach(char => {
-                html += `
-                    <div class="similar-person-card">
-                        <div class="similar-person-image">${char.image}</div>
-                        <div class="similar-person-name">${char.name}</div>
-                        <div class="similar-person-work">${char.work}</div>
-                    </div>
-                `;
-            });
-
-            html += `</div></div>`;
+            similarGrid.appendChild(createTypeGroup(`💜 ${enneaType}번 유형`, enneaData));
         }
     }
-
-    similarGrid.innerHTML = html;
 }
 
 function getMBTIType() {
@@ -788,6 +860,16 @@ function shareResult() {
 }
 
 // ===== Utility Functions =====
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function shuffleArray(array) {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -826,5 +908,14 @@ if (typeof document !== 'undefined') {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { shuffleArray };
+    module.exports = {
+        shuffleArray,
+        getEnneagramType,
+        setEnneagramScores: (scores) => { enneagramScores = scores; },
+        resetEnneagramScores: () => { enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }; },
+        applyMBTIScore,
+        getMbtiScores: () => mbtiScores,
+        setIsYesNoMode: (val) => { isYesNoMode = val; },
+        resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; }
+    };
 }
