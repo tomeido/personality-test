@@ -554,11 +554,8 @@ function displayMBTIResult() {
 
 function displayEnneagramResult() {
     // Find top type and wing
-    let sortedTypes = Object.entries(enneagramScores)
-        .sort((a, b) => b[1] - a[1]);
-
-    const mainType = parseInt(sortedTypes[0][0]);
-    const mainScore = sortedTypes[0][1];
+    const mainType = getEnneagramType();
+    const mainScore = enneagramScores[mainType];
 
     // Find wing (adjacent type with higher score)
     const prevType = mainType === 1 ? 9 : mainType - 1;
