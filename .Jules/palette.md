@@ -1,0 +1,3 @@
+## 2024-06-25 - Essential ARIA additions to progress and questions
+**Learning:** Pure visual feedback on testing forms causes significant accessibility issues. Progress bars without `role="progressbar"` are invisible to screen readers, and dynamic content changes like updating the question text require `aria-live` to be announced. Additionally, decorative emojis in answer buttons create awkward "smiling face with smiling eyes" readouts before the actual text option.
+**Action:** Always add semantic roles/attributes to progress indicators (`role`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`). Use `aria-live="polite"` on containers where the text content updates sequentially without a page reload. Hide decorative elements (like emojis) with `aria-hidden="true"`.

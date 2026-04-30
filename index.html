@@ -152,12 +152,12 @@
                         <span id="progress-text">질문 1 / 20</span>
                         <span id="progress-percent">0%</span>
                     </div>
-                    <div class="progress-bar">
+                    <div class="progress-bar" role="progressbar" aria-labelledby="progress-text" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar">
                         <div class="progress-fill" id="progress-fill"></div>
                     </div>
                 </div>
 
-                <div class="question-content">
+                <div class="question-content" aria-live="polite">
                     <div class="question-number" id="question-number">Q1</div>
                     <h2 class="question-text" id="question-text">
                         새로운 사람들과 만나는 것이 즐겁고 에너지를 얻는다.
@@ -166,23 +166,23 @@
 
                 <div class="answer-options" id="answer-options">
                     <button class="answer-btn" onclick="selectAnswer(0)">
-                        <span class="answer-icon">😊</span>
+                        <span class="answer-icon" aria-hidden="true">😊</span>
                         <span class="answer-text">매우 그렇다</span>
                     </button>
                     <button class="answer-btn" onclick="selectAnswer(1)">
-                        <span class="answer-icon">🙂</span>
+                        <span class="answer-icon" aria-hidden="true">🙂</span>
                         <span class="answer-text">그렇다</span>
                     </button>
                     <button class="answer-btn" onclick="selectAnswer(2)">
-                        <span class="answer-icon">😐</span>
+                        <span class="answer-icon" aria-hidden="true">😐</span>
                         <span class="answer-text">보통이다</span>
                     </button>
                     <button class="answer-btn" onclick="selectAnswer(3)">
-                        <span class="answer-icon">🤔</span>
+                        <span class="answer-icon" aria-hidden="true">🤔</span>
                         <span class="answer-text">아니다</span>
                     </button>
                     <button class="answer-btn" onclick="selectAnswer(4)">
-                        <span class="answer-icon">😌</span>
+                        <span class="answer-icon" aria-hidden="true">😌</span>
                         <span class="answer-text">매우 아니다</span>
                     </button>
                 </div>
@@ -190,11 +190,11 @@
                 <!-- Yes/No Style (hidden by default) -->
                 <div class="answer-options yes-no-style" id="answer-options-yesno" style="display: none;">
                     <button class="answer-btn yes-btn" onclick="selectAnswer(0)">
-                        <span class="answer-icon">👍</span>
+                        <span class="answer-icon" aria-hidden="true">👍</span>
                         <span class="answer-text">YES</span>
                     </button>
                     <button class="answer-btn no-btn" onclick="selectAnswer(1)">
-                        <span class="answer-icon">👎</span>
+                        <span class="answer-icon" aria-hidden="true">👎</span>
                         <span class="answer-text">NO</span>
                     </button>
                 </div>
