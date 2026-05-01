@@ -1407,3 +1407,21 @@ body {
     outline: 2px solid var(--text-primary);
     outline-offset: 4px;
 }
+
+/* Keyboard Shortcut Hints */
+.shortcut-hint {
+    margin-left: auto;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+}
+.answer-btn:hover .shortcut-hint,
+.answer-btn:focus-visible .shortcut-hint {
+    color: var(--text-secondary);
+    border-color: rgba(255, 255, 255, 0.4);
+}
