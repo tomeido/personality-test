@@ -116,9 +116,11 @@ function displayQuestion() {
 
     // Update progress
     const progressPercent = (currentNum / totalQuestions) * 100;
+    const roundedPercent = Math.round(progressPercent);
     document.getElementById('progress-text').textContent = `질문 ${currentNum} / ${totalQuestions}`;
-    document.getElementById('progress-percent').textContent = `${Math.round(progressPercent)}%`;
+    document.getElementById('progress-percent').textContent = `${roundedPercent}%`;
     document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', roundedPercent);
 
     // Update question
     document.getElementById('question-number').textContent = `Q${currentNum}`;
@@ -934,8 +936,10 @@ if (typeof module !== 'undefined' && module.exports) {
         setEnneagramScores: (scores) => { enneagramScores = scores; },
         resetEnneagramScores: () => { enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }; },
         applyMBTIScore,
+        getMBTIType,
         getMbtiScores: () => mbtiScores,
         setIsYesNoMode: (val) => { isYesNoMode = val; },
-        resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; }
+        resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; },
+        setMbtiScores: (scores) => { mbtiScores = scores; }
     };
 }
