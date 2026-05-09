@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { getMBTIType, getMbtiScores, setMbtiScores, resetMbtiScores } = require('./script.js');
+const { getMBTIType, setMbtiScores, resetMbtiScores } = require('./script.js');
 
 test('getMBTIType utility', async (t) => {
     t.afterEach(() => {
@@ -32,7 +32,12 @@ test('getMBTIType utility', async (t) => {
     });
 
     await t.test('should return ESTJ when all scores are exactly zero', () => {
-        resetMbtiScores();
+        setMbtiScores({
+            EI: 0,
+            SN: 0,
+            TF: 0,
+            JP: 0
+        });
 
         // 0 / 10 = 0. 50 + 0 = 50. >= 50 defaults to left letters (ESTJ)
         const result = getMBTIType();
