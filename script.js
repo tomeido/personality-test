@@ -120,6 +120,7 @@ function displayQuestion() {
     document.getElementById('progress-text').textContent = `질문 ${currentNum} / ${totalQuestions}`;
     document.getElementById('progress-percent').textContent = `${roundedPercent}%`;
     document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', Math.round(progressPercent));
 
     // Update ARIA attributes for progress bar
     const progressBar = document.querySelector('.progress-bar');
