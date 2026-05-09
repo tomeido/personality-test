@@ -120,7 +120,6 @@ function displayQuestion() {
     document.getElementById('progress-text').textContent = `질문 ${currentNum} / ${totalQuestions}`;
     document.getElementById('progress-percent').textContent = `${roundedPercent}%`;
     document.getElementById('progress-fill').style.width = `${progressPercent}%`;
-    document.getElementById('progress-bar').setAttribute('aria-valuenow', Math.round(progressPercent));
 
     // Update ARIA attributes for progress bar
     const progressBar = document.querySelector('.progress-bar');
@@ -948,6 +947,9 @@ if (typeof module !== 'undefined' && module.exports) {
         setMbtiScores: (scores) => { mbtiScores = scores; },
         setIsYesNoMode: (val) => { isYesNoMode = val; },
         resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; },
-        setMbtiScores: (scores) => { mbtiScores = scores; }
+        setMbtiScores: (scores) => { mbtiScores = scores; },
+        applyInstinctScore,
+        getInstinctScores: () => instinctScores,
+        resetInstinctScores: () => { instinctScores = { SP: 0, SO: 0, SX: 0 }; }
     };
 }
