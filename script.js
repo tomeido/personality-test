@@ -935,7 +935,12 @@ if (typeof module !== 'undefined' && module.exports) {
         resetEnneagramScores: () => { enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }; },
         applyMBTIScore,
         getMbtiScores: () => mbtiScores,
+        setMbtiScores: (scores) => { mbtiScores = scores; },
+        getMBTIType,
         setIsYesNoMode: (val) => { isYesNoMode = val; },
-        resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; }
+        resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; },
+        applyInstinctScore,
+        getInstinctScores: () => instinctScores,
+        resetInstinctScores: () => { instinctScores = { SP: 0, SO: 0, SX: 0 }; }
     };
 }
