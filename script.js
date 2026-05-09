@@ -945,6 +945,7 @@ if (typeof module !== 'undefined' && module.exports) {
         applyMBTIScore,
         getMBTIType,
         getMbtiScores: () => mbtiScores,
+        setMbtiScores: (scores) => { mbtiScores = scores; },
         setIsYesNoMode: (val) => { isYesNoMode = val; },
         resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; },
         setMbtiScores: (scores) => { mbtiScores = scores; }

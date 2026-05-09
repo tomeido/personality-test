@@ -1,3 +1,3 @@
-## 2024-03-20 - Dynamic Quiz Progress Announcements
-**Learning:** In Single Page Application (SPA) quiz flows, visually updating a progress bar and text isn't enough for screen reader users. Without ARIA live regions, the context of moving to the next question is lost because there's no full page refresh.
-**Action:** Always apply `aria-live="polite"` and `aria-atomic="true"` to question containers and text-based progress indicators. For the visual progress bar itself, apply `role="progressbar"`, set `aria-valuemin` and `aria-valuemax`, and ensure `aria-valuenow` is dynamically updated via JavaScript to maintain synchronization between visual and semantic states.
+## 2024-05-05 - Dynamic Content Accessibility
+**Learning:** In vanilla JavaScript SPAs where content updates dynamically (like a quiz UI), screen readers are unaware of the DOM changes.
+**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element of dynamic content so that screen readers can announce the updates gracefully without requiring a page reload.
