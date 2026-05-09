@@ -879,7 +879,14 @@ function shareResult() {
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
+            const shareBtn = document.querySelector('.action-btn.secondary');
+            if (shareBtn) {
+                const originalHTML = shareBtn.innerHTML;
+                shareBtn.innerHTML = '<span aria-hidden="true">✅</span> 복사 완료!';
+                setTimeout(() => {
+                    shareBtn.innerHTML = originalHTML;
+                }, 2000);
+            }
         }).catch(() => {
             alert(shareText);
         });

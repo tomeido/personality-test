@@ -152,7 +152,7 @@
                         <span id="progress-text">질문 1 / 20</span>
                         <span id="progress-percent">0%</span>
                     </div>
-                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-bar" role="progressbar" aria-labelledby="progress-text" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                         <div class="progress-fill" id="progress-fill"></div>
                     </div>
                 </div>
@@ -496,12 +496,12 @@
                 </div>
             </div>
 
-            <div class="result-actions">
+            <div class="result-actions" aria-live="polite">
                 <button class="action-btn primary" onclick="goToStart()">
-                    <span>🔄</span> 다시 테스트하기
+                    <span aria-hidden="true">🔄</span> 다시 테스트하기
                 </button>
                 <button class="action-btn secondary" onclick="shareResult()">
-                    <span>📤</span> 결과 공유하기
+                    <span aria-hidden="true">📤</span> 결과 공유하기
                 </button>
             </div>
         </div>
