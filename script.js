@@ -879,7 +879,28 @@ function shareResult() {
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
+            if (typeof document !== 'undefined') {
+                const shareBtn = document.getElementById('share-btn');
+                if (shareBtn) {
+                    shareBtn.innerHTML = '';
+                    const successIcon = document.createElement('span');
+                    successIcon.setAttribute('aria-hidden', 'true');
+                    successIcon.textContent = '✅';
+                    shareBtn.appendChild(successIcon);
+                    shareBtn.appendChild(document.createTextNode(' 복사 완료!'));
+
+                    setTimeout(() => {
+                        shareBtn.innerHTML = '';
+                        const originalIcon = document.createElement('span');
+                        originalIcon.setAttribute('aria-hidden', 'true');
+                        originalIcon.textContent = '📤';
+                        shareBtn.appendChild(originalIcon);
+                        shareBtn.appendChild(document.createTextNode(' 결과 공유하기'));
+                    }, 2000);
+                }
+            } else {
+                alert('결과가 클립보드에 복사되었습니다!');
+            }
         }).catch(() => {
             alert(shareText);
         });
