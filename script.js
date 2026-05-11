@@ -848,7 +848,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(buttonElement) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
 
     if (currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno') {
@@ -871,6 +871,41 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const handleCopySuccess = () => {
+        if (!buttonElement) {
+            alert('결과가 클립보드에 복사되었습니다!');
+            return;
+        }
+
+        if (buttonElement.disabled) return;
+        buttonElement.disabled = true;
+
+        const originalHTML = buttonElement.innerHTML;
+
+        // Clear content safely
+        buttonElement.innerHTML = '';
+
+        // Rebuild with safe DOM API
+        const iconSpan = document.createElement('span');
+        iconSpan.setAttribute('aria-hidden', 'true');
+        iconSpan.textContent = '✅';
+
+        const textNode = document.createTextNode(' 복사 완료!');
+
+        buttonElement.appendChild(iconSpan);
+        buttonElement.appendChild(textNode);
+
+        buttonElement.style.borderColor = 'var(--accent-success, #4ade80)';
+        buttonElement.style.color = 'var(--accent-success, #4ade80)';
+
+        setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.style.borderColor = '';
+            buttonElement.style.color = '';
+            buttonElement.disabled = false;
+        }, 2000);
+    };
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
@@ -879,9 +914,9 @@ function shareResult() {
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
+            handleCopySuccess();
         }).catch(() => {
-            alert(shareText);
+            alert('클립보드 복사에 실패했습니다:\n' + shareText);
         });
     }
 }
