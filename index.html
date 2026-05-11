@@ -142,7 +142,7 @@
             <div class="question-panel">
                 <div class="test-header">
                     <button class="back-btn" onclick="goToStart()">
-                        <span>←</span> 처음으로
+                        <span aria-hidden="true">←</span> 처음으로
                     </button>
                     <div class="test-type-badge" id="test-type-badge">MBTI</div>
                 </div>
@@ -498,10 +498,10 @@
 
             <div class="result-actions">
                 <button class="action-btn primary" onclick="goToStart()">
-                    <span>🔄</span> 다시 테스트하기
+                    <span aria-hidden="true">🔄</span> 다시 테스트하기
                 </button>
-                <button class="action-btn secondary" onclick="shareResult()">
-                    <span>📤</span> 결과 공유하기
+                <button class="action-btn secondary" onclick="shareResult(this)">
+                    <span aria-hidden="true">📤</span> 결과 공유하기
                 </button>
             </div>
         </div>
