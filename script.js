@@ -1,5 +1,5 @@
 // ===== State Management =====
-let currentTest = null; // 'mbti', 'enneagram', 'instinct', 'both', 'complete', or 'mbti-yesno'
+let currentTest = null; // 'mbti', 'enneagram', 'instinct', 'both', 'complete', 'mbti-yesno', 'mbti-scenario', or 'tournament'
 let currentPhase = null; // 'mbti', 'enneagram', or 'instinct'
 let currentQuestionIndex = 0;
 let questions = [];
@@ -96,10 +96,23 @@ function startTest(testType) {
         // Switch to Yes/No answer buttons
         document.getElementById('answer-options').style.display = 'none';
         document.getElementById('answer-options-yesno').style.display = 'flex';
+    } else if (testType === 'mbti-scenario') {
+        // MBTI Scenario (situational) Test — shuffled choices per question
+        questions = MBTI_SCENARIO_QUESTIONS.map(q => ({
+            ...q,
+            choices: shuffleArray([...q.choices])
+        }));
+        currentPhase = 'mbti';
+        document.getElementById('test-type-badge').textContent = 'MBTI 🎬';
+        document.getElementById('mbti-viz').style.display = 'block';
+    } else if (testType === 'tournament') {
+        startTournament();
+        return;
     }
 
     // Update UI
     updateVisualization();
+    updateCharacterBuilder();
     displayQuestion();
     showScreen('test-screen');
 }
@@ -131,10 +144,52 @@ function displayQuestion() {
     document.getElementById('question-number').textContent = `Q${currentNum}`;
     document.getElementById('question-text').textContent = question.text;
 
+    // Render answer UI based on question presentation
+    renderAnswerUI(question);
+
     // Reset answer buttons
     document.querySelectorAll('.answer-btn').forEach(btn => {
         btn.classList.remove('selected');
     });
+
+    // Mid-test spoiler (every 5 questions, not on the first)
+    maybeShowSpoiler(currentNum, totalQuestions);
+}
+
+function renderAnswerUI(question) {
+    const likertEl = document.getElementById('answer-options');
+    const yesNoEl = document.getElementById('answer-options-yesno');
+    const scenarioEl = document.getElementById('answer-options-scenario');
+
+    if (likertEl) likertEl.style.display = 'none';
+    if (yesNoEl) yesNoEl.style.display = 'none';
+    if (scenarioEl) scenarioEl.style.display = 'none';
+
+    if (question.presentation === 'scenario') {
+        if (!scenarioEl) return;
+        scenarioEl.style.display = 'grid';
+        scenarioEl.innerHTML = '';
+        question.choices.forEach((choice, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'answer-btn scenario-btn';
+            btn.type = 'button';
+            btn.addEventListener('click', () => selectAnswer(i));
+            const icon = document.createElement('span');
+            icon.className = 'answer-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = choice.emoji;
+            const txt = document.createElement('span');
+            txt.className = 'answer-text';
+            txt.textContent = choice.text;
+            btn.appendChild(icon);
+            btn.appendChild(txt);
+            scenarioEl.appendChild(btn);
+        });
+    } else if (isYesNoMode) {
+        if (yesNoEl) yesNoEl.style.display = 'flex';
+    } else {
+        if (likertEl) likertEl.style.display = 'flex';
+    }
 }
 
 function getTotalQuestions() {
@@ -163,8 +218,10 @@ function getCurrentQuestionNumber() {
 function selectAnswer(answerIndex) {
     const question = questions[currentQuestionIndex];
 
-    // Apply score based on current phase
-    if (currentPhase === 'mbti') {
+    // Scenario-format questions carry their own per-choice score map.
+    if (question && question.presentation === 'scenario') {
+        applyScenarioScore(question, answerIndex);
+    } else if (currentPhase === 'mbti') {
         applyMBTIScore(question, answerIndex);
     } else if (currentPhase === 'enneagram') {
         applyEnneagramScore(question, answerIndex);
@@ -174,15 +231,30 @@ function selectAnswer(answerIndex) {
 
     // Update visualization with animation
     updateVisualization();
+    updateCharacterBuilder();
 
-    // Mark button as selected briefly
-    const buttons = document.querySelectorAll('.answer-btn');
-    buttons[answerIndex].classList.add('selected');
+    // Mark button as selected briefly (works for both static and dynamically-rendered buttons)
+    const activeContainer = document.querySelector('.answer-options:not([style*="display: none"])') ||
+                            document.getElementById('answer-options');
+    const buttons = activeContainer ? activeContainer.querySelectorAll('.answer-btn') : [];
+    if (buttons[answerIndex]) {
+        buttons[answerIndex].classList.add('selected');
+    }
 
     // Move to next question after a short delay
     setTimeout(() => {
         nextQuestion();
     }, 400);
+}
+
+function applyScenarioScore(question, choiceIndex) {
+    const choice = question.choices[choiceIndex];
+    if (!choice || !choice.scores) return;
+    for (const [axis, value] of Object.entries(choice.scores)) {
+        if (axis in mbtiScores) {
+            mbtiScores[axis] += value;
+        }
+    }
 }
 
 function applyMBTIScore(question, answerIndex) {
@@ -241,6 +313,8 @@ function applyInstinctScore(question, answerIndex) {
 
 function nextQuestion() {
     currentQuestionIndex++;
+    // Adaptive: if a phase axis is already decisive, fast-forward through its questions.
+    skipQuestionsForDecidedAxes();
 
     // Check if we need to switch phases (for 'both' mode)
     if (currentTest === 'both' && currentPhase === 'mbti' && currentQuestionIndex >= MBTI_QUESTIONS.length) {
@@ -463,7 +537,7 @@ function updateInstinctVisualization() {
 // ===== Results =====
 function showResults() {
     // Prepare result cards
-    const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno';
+    const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
     const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
 
@@ -850,20 +924,23 @@ function getEnneagramType() {
 // ===== Share Result =====
 function shareResult() {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
+    const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
+    const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
+    const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
 
-    if (currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno') {
+    if (showMBTI) {
         const mbtiType = document.getElementById('result-mbti-type').textContent;
         const mbtiName = document.getElementById('result-mbti-name').textContent;
         shareText += `📊 MBTI: ${mbtiType} (${mbtiName})\n`;
     }
 
-    if (currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete') {
+    if (showEnneagram) {
         const enneaType = document.getElementById('result-enneagram-type').textContent;
         const enneaName = document.getElementById('result-enneagram-name').textContent;
         shareText += `💜 Enneagram: ${enneaType}번 ${enneaName}\n`;
     }
 
-    if (currentTest === 'instinct' || currentTest === 'complete') {
+    if (showInstinct) {
         const instinctType = document.getElementById('result-instinct-type').textContent;
         const instinctName = document.getElementById('result-instinct-name').textContent;
         shareText += `🔥 본능 유형: ${instinctType} (${instinctName})\n`;
@@ -884,6 +961,123 @@ function shareResult() {
             alert(shareText);
         });
     }
+}
+
+// ===== Result image card =====
+// Renders a shareable PNG of the user's result and either invokes Web Share with
+// the file (mobile) or downloads it directly (desktop).
+function buildResultCardCanvas() {
+    const W = 1080, H = 1350; // Instagram portrait
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Gradient background
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#0f0f23');
+    bg.addColorStop(0.5, '#1a1a3e');
+    bg.addColorStop(1, '#2a1654');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Decorative title
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '600 32px "Noto Sans KR", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🧠 나의 성격 테스트 결과', W / 2, 110);
+
+    let y = 230;
+    const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
+    const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
+    const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
+
+    const drawCard = (badge, big, small, accent) => {
+        const pad = 60;
+        const cardH = 230;
+        const cardX = pad;
+        const cardW = W - pad * 2;
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        roundRect(ctx, cardX, y, cardW, cardH, 28, true, false);
+        ctx.fillStyle = accent;
+        ctx.font = '500 28px "Noto Sans KR", system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(badge, cardX + 40, y + 60);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 110px "Noto Sans KR", system-ui, sans-serif';
+        ctx.fillText(big, cardX + 40, y + 175);
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = '500 38px "Noto Sans KR", system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(small, cardX + cardW - 40, y + 175);
+        y += cardH + 30;
+    };
+
+    if (showMBTI) {
+        const t = document.getElementById('result-mbti-type')?.textContent || getMBTIType();
+        const n = document.getElementById('result-mbti-name')?.textContent || '';
+        drawCard('📊 MBTI', t, n, '#4facfe');
+    }
+    if (showEnneagram) {
+        const t = document.getElementById('result-enneagram-type')?.textContent || String(getEnneagramType());
+        const n = document.getElementById('result-enneagram-name')?.textContent || '';
+        drawCard('💜 Enneagram', `${t}번`, n, '#a18cd1');
+    }
+    if (showInstinct) {
+        const t = document.getElementById('result-instinct-type')?.textContent || '';
+        const n = document.getElementById('result-instinct-name')?.textContent || '';
+        drawCard('🔥 본능 유형', t, n, '#fd79a8');
+    }
+
+    // Footer
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '400 28px "Noto Sans KR", system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('✨ 실시간 성격 테스트', W / 2, H - 80);
+
+    return canvas;
+}
+
+function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+}
+
+async function downloadResultCard() {
+    const canvas = buildResultCardCanvas();
+    const filename = `personality-result-${Date.now()}.png`;
+
+    // Prefer Web Share API with file (mobile)
+    if (navigator.canShare && typeof canvas.toBlob === 'function') {
+        try {
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (blob) {
+                const file = new File([blob], filename, { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
+                    return;
+                }
+            }
+        } catch (err) {
+            // Fall through to download
+        }
+    }
+
+    // Fallback: trigger a download
+    const dataURL = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 // ===== Utility Functions =====
@@ -934,6 +1128,209 @@ if (typeof document !== 'undefined') {
     });
 }
 
+// ===== Character Builder =====
+// Real-time avatar that gains traits as scores cross thresholds.
+// Pure UI; safe no-op in non-DOM (test) environment.
+const CHARACTER_TRAIT_RULES = [
+    { axis: 'EI', side: 'pos', threshold: 3, chip: '🗣️ 외향', face: '😄' },
+    { axis: 'EI', side: 'neg', threshold: 3, chip: '🤫 내향', face: '🤓' },
+    { axis: 'SN', side: 'pos', threshold: 3, chip: '🔎 현실적', face: null },
+    { axis: 'SN', side: 'neg', threshold: 3, chip: '🌠 직관적', face: null },
+    { axis: 'TF', side: 'pos', threshold: 3, chip: '📊 논리', face: null },
+    { axis: 'TF', side: 'neg', threshold: 3, chip: '💗 공감', face: null },
+    { axis: 'JP', side: 'pos', threshold: 3, chip: '📅 계획형', face: null },
+    { axis: 'JP', side: 'neg', threshold: 3, chip: '🎲 즉흥형', face: null }
+];
+
+function updateCharacterBuilder() {
+    if (typeof document === 'undefined') return;
+    const traitsEl = document.getElementById('character-traits');
+    const faceEl = document.getElementById('character-face');
+    const nameEl = document.getElementById('character-name');
+    if (!traitsEl || !faceEl) return;
+
+    const earnedChips = [];
+    let face = '🙂';
+    for (const rule of CHARACTER_TRAIT_RULES) {
+        const score = mbtiScores[rule.axis];
+        const triggered = rule.side === 'pos' ? score >= rule.threshold : score <= -rule.threshold;
+        if (triggered) {
+            earnedChips.push(rule.chip);
+            if (rule.face) face = rule.face;
+        }
+    }
+
+    traitsEl.innerHTML = '';
+    earnedChips.forEach(chip => {
+        const span = document.createElement('span');
+        span.className = 'trait-chip';
+        span.textContent = chip;
+        traitsEl.appendChild(span);
+    });
+    faceEl.textContent = face;
+
+    if (nameEl) {
+        if (earnedChips.length === 0) {
+            nameEl.textContent = '아직 알 수 없는 사람';
+        } else if (currentPhase === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-scenario' || currentTest === 'mbti-yesno') {
+            nameEl.textContent = `${getMBTIType()} 성향이 보입니다`;
+        } else {
+            nameEl.textContent = '성격이 형성되는 중…';
+        }
+    }
+}
+
+// ===== Mid-test spoiler =====
+let lastSpoilerAtQuestion = -1;
+
+function maybeShowSpoiler(currentNum, totalQuestions) {
+    if (typeof document === 'undefined') return;
+    if (currentNum <= 1) return;
+    if (currentNum === lastSpoilerAtQuestion) return;
+    // Fire at every 5th question, but not on the very last one (would clash with result reveal).
+    if (currentNum % 5 !== 0) return;
+    if (currentNum >= totalQuestions) return;
+
+    let message = '';
+    if (currentPhase === 'mbti') {
+        message = `🔮 지금까지의 흐름: ${getMBTIType()} 쪽으로 기울고 있어요`;
+    } else if (currentPhase === 'enneagram') {
+        message = `🔮 지금까지의 흐름: ${getEnneagramType()}번 유형 쪽으로 기울고 있어요`;
+    } else if (currentPhase === 'instinct') {
+        const sorted = Object.entries(instinctScores).sort((a, b) => b[1] - a[1]);
+        message = `🔮 지금까지의 흐름: ${sorted[0][0]} 본능이 우세해요`;
+    }
+    if (!message) return;
+
+    const toast = document.getElementById('spoiler-toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    lastSpoilerAtQuestion = currentNum;
+    clearTimeout(maybeShowSpoiler._t);
+    maybeShowSpoiler._t = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// ===== Adaptive shortened mode =====
+// Skip Likert questions targeting an axis whose absolute score already exceeds
+// a decisive threshold. Only applies to traditional MBTI-axis questions.
+const ADAPTIVE_DECISION_THRESHOLD = 8;
+
+function isAxisDecided(axis) {
+    if (!(axis in mbtiScores)) return false;
+    return Math.abs(mbtiScores[axis]) >= ADAPTIVE_DECISION_THRESHOLD;
+}
+
+function skipQuestionsForDecidedAxes() {
+    if (!questions || !questions.length) return;
+    if (currentPhase !== 'mbti') return;
+    // Only fast-forward across consecutive decided-axis questions.
+    while (currentQuestionIndex < questions.length) {
+        const q = questions[currentQuestionIndex];
+        // Scenario questions touch multiple axes — never skip them.
+        if (!q || q.presentation === 'scenario') break;
+        if (!q.axis) break;
+        if (!isAxisDecided(q.axis)) break;
+        currentQuestionIndex++;
+    }
+}
+
+// ===== Tournament (이상형 월드컵) =====
+let tournamentState = null;
+
+function startTournament() {
+    if (typeof TOURNAMENT_POOL === 'undefined') return;
+    const shuffled = shuffleArray([...TOURNAMENT_POOL]);
+    // Use up to 16 contestants; pool may be smaller, so pad to nearest power of 2.
+    let bracketSize = 1;
+    while (bracketSize * 2 <= shuffled.length) bracketSize *= 2;
+    const initial = shuffled.slice(0, bracketSize);
+
+    instinctScores = { SP: 0, SO: 0, SX: 0 };
+    tournamentState = {
+        roundContestants: initial,
+        nextRound: [],
+        matchIndex: 0,
+        roundNumber: 1,
+        totalRounds: Math.log2(bracketSize)
+    };
+    currentTest = 'tournament';
+    currentPhase = 'tournament';
+    showScreen('tournament-screen');
+    renderTournamentMatchup();
+}
+
+function tournamentRoundLabel(state) {
+    const remaining = state.roundContestants.length;
+    if (remaining === 2) return '결승';
+    if (remaining === 4) return '4강';
+    if (remaining === 8) return '8강';
+    if (remaining === 16) return '16강';
+    return `${remaining}강`;
+}
+
+function renderTournamentMatchup() {
+    if (typeof document === 'undefined' || !tournamentState) return;
+    const s = tournamentState;
+    if (s.matchIndex >= s.roundContestants.length) {
+        if (s.nextRound.length === 1) {
+            finishTournament(s.nextRound[0]);
+            return;
+        }
+        s.roundContestants = s.nextRound;
+        s.nextRound = [];
+        s.matchIndex = 0;
+        s.roundNumber++;
+    }
+
+    const left = s.roundContestants[s.matchIndex];
+    const right = s.roundContestants[s.matchIndex + 1];
+    const totalMatchesThisRound = s.roundContestants.length / 2;
+    const matchNumberThisRound = s.matchIndex / 2 + 1;
+
+    const roundEl = document.getElementById('tournament-round');
+    if (roundEl) roundEl.textContent = `${tournamentRoundLabel(s)} · ${matchNumberThisRound} / ${totalMatchesThisRound}`;
+
+    const leftEmoji = document.getElementById('tournament-left-emoji');
+    const leftText = document.getElementById('tournament-left-text');
+    const rightEmoji = document.getElementById('tournament-right-emoji');
+    const rightText = document.getElementById('tournament-right-text');
+    if (leftEmoji) leftEmoji.textContent = left.emoji;
+    if (leftText) leftText.textContent = left.text;
+    if (rightEmoji) rightEmoji.textContent = right.emoji;
+    if (rightText) rightText.textContent = right.text;
+}
+
+function pickTournamentSide(side) {
+    if (!tournamentState) return;
+    const s = tournamentState;
+    const left = s.roundContestants[s.matchIndex];
+    const right = s.roundContestants[s.matchIndex + 1];
+    if (!left || !right) return;
+
+    const winner = side === 'left' ? left : right;
+    const loser = side === 'left' ? right : left;
+
+    // Winners get more weight; losers also score a small amount because reaching
+    // the bracket means the user implicitly considered them.
+    if (winner.instinct in instinctScores) instinctScores[winner.instinct] += 2;
+    if (loser.instinct in instinctScores) instinctScores[loser.instinct] += 0;
+
+    s.nextRound.push(winner);
+    s.matchIndex += 2;
+    renderTournamentMatchup();
+}
+
+function finishTournament(champion) {
+    currentTest = 'instinct'; // route through the existing instinct result UI
+    currentPhase = 'instinct';
+    // Bias scores by the champion so the winner is always the top instinct.
+    if (champion && champion.instinct in instinctScores) {
+        instinctScores[champion.instinct] += 5;
+    }
+    showResults();
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         shuffleArray,
@@ -942,14 +1339,15 @@ if (typeof module !== 'undefined' && module.exports) {
         getMBTIType,
         resetEnneagramScores: () => { enneagramScores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 }; },
         applyMBTIScore,
-        getMBTIType,
+        applyScenarioScore,
         getMbtiScores: () => mbtiScores,
         setMbtiScores: (scores) => { mbtiScores = scores; },
         setIsYesNoMode: (val) => { isYesNoMode = val; },
         resetMbtiScores: () => { mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 }; },
-        setMbtiScores: (scores) => { mbtiScores = scores; },
         applyInstinctScore,
         getInstinctScores: () => instinctScores,
-        resetInstinctScores: () => { instinctScores = { SP: 0, SO: 0, SX: 0 }; }
+        resetInstinctScores: () => { instinctScores = { SP: 0, SO: 0, SX: 0 }; },
+        isAxisDecided,
+        skipQuestionsForDecidedAxes
     };
 }
