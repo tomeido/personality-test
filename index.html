@@ -125,6 +125,38 @@
                         </div>
                     </div>
                 </button>
+
+                <button class="test-card scenario-test" onclick="startTest('mbti-scenario')">
+                    <div class="card-glow scenario-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">🎬</div>
+                        <h2>시나리오 MBTI 테스트</h2>
+                        <p>밋밋한 5점 척도 대신, 실제 상황에서 어떻게 행동할지 골라보세요</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 3분</span>
+                            <span>📝 12문항</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>🕺</span><span>☕</span><span>🎮</span><span>📋</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="test-card tournament-test" onclick="startTest('tournament')">
+                    <div class="card-glow tournament-glow"></div>
+                    <div class="card-content">
+                        <div class="card-icon">🏆</div>
+                        <h2>본능 월드컵</h2>
+                        <p>이상형 월드컵 스타일! 16강에서 결승까지 둘 중 끌리는 쪽을 선택</p>
+                        <div class="card-meta">
+                            <span>⏱ 약 2분</span>
+                            <span>📝 15라운드</span>
+                        </div>
+                        <div class="type-preview">
+                            <span>🏠 vs 🔥</span><span>👥 vs 🏕️</span>
+                        </div>
+                    </div>
+                </button>
             </div>
         </div>
 
@@ -197,6 +229,11 @@
                         <span class="answer-icon" aria-hidden="true">👎</span>
                         <span class="answer-text">NO</span>
                     </button>
+                </div>
+
+                <!-- Scenario Style (hidden by default, filled dynamically) -->
+                <div class="answer-options scenario-style" id="answer-options-scenario" style="display: none;" aria-live="polite" aria-atomic="true">
+                    <!-- Buttons rendered by renderAnswerUI() -->
                 </div>
             </div>
 
@@ -422,9 +459,44 @@
                 <div class="viz-footer">
                     <p>💡 답변을 선택하면 실시간으로 분석이 업데이트됩니다</p>
                 </div>
+
+                <!-- Real-time Character Builder -->
+                <div id="character-builder" class="character-builder" aria-live="polite" aria-atomic="true">
+                    <div class="character-face" id="character-face">🙂</div>
+                    <div class="character-name" id="character-name">아직 알 수 없는 사람</div>
+                    <div class="character-traits" id="character-traits"></div>
+                </div>
             </div>
         </div>
     </section>
+
+    <!-- Tournament Screen (이상형 월드컵) -->
+    <section id="tournament-screen" class="screen">
+        <div class="tournament-container">
+            <div class="test-header" style="justify-content: space-between; max-width: 800px; margin: 0 auto var(--spacing-lg);">
+                <button class="back-btn" onclick="goToStart()">
+                    <span>←</span> 처음으로
+                </button>
+                <div class="test-type-badge">본능 월드컵 🏆</div>
+            </div>
+            <h2 class="tournament-round" id="tournament-round">16강 · 1/8</h2>
+            <p class="tournament-prompt" style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">둘 중 더 끌리는 쪽을 골라주세요</p>
+            <div class="tournament-matchup" id="tournament-matchup">
+                <button class="tournament-card" id="tournament-left" type="button" onclick="pickTournamentSide('left')">
+                    <span class="tournament-emoji" id="tournament-left-emoji">🏠</span>
+                    <span class="tournament-text" id="tournament-left-text"></span>
+                </button>
+                <div class="tournament-vs">VS</div>
+                <button class="tournament-card" id="tournament-right" type="button" onclick="pickTournamentSide('right')">
+                    <span class="tournament-emoji" id="tournament-right-emoji">🔥</span>
+                    <span class="tournament-text" id="tournament-right-text"></span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mid-test spoiler toast -->
+    <div id="spoiler-toast" role="status" aria-live="polite"></div>
 
     <!-- Result Screen -->
     <section id="result-screen" class="screen">
@@ -500,8 +572,11 @@
                 <button class="action-btn primary" onclick="goToStart()">
                     <span>🔄</span> 다시 테스트하기
                 </button>
+                <button class="action-btn secondary" onclick="downloadResultCard()">
+                    <span>🖼️</span> 이미지로 저장
+                </button>
                 <button class="action-btn secondary" onclick="shareResult()">
-                    <span>📤</span> 결과 공유하기
+                    <span>📤</span> 텍스트 공유
                 </button>
             </div>
         </div>
@@ -510,6 +585,8 @@
     <script src="data/mbti-questions.js"></script>
     <script src="data/enneagram-questions.js"></script>
     <script src="data/instinct-questions.js"></script>
+    <script src="data/mbti-scenarios.js"></script>
+    <script src="data/tournament-pairs.js"></script>
     <script src="data/pdb-data.js"></script>
     <script src="script.js"></script>
 </body>
