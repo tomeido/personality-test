@@ -973,69 +973,594 @@ function buildResultCardCanvas() {
     canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // Gradient background
-    const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, '#0f0f23');
-    bg.addColorStop(0.5, '#1a1a3e');
-    bg.addColorStop(1, '#2a1654');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    // Decorative title
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    ctx.font = '600 32px "Noto Sans KR", system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🧠 나의 성격 테스트 결과', W / 2, 110);
-
-    let y = 230;
+    // ---- Determine which sections are visible ----
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
     const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
 
-    const drawCard = (badge, big, small, accent) => {
-        const pad = 60;
-        const cardH = 230;
-        const cardX = pad;
-        const cardW = W - pad * 2;
-        ctx.fillStyle = 'rgba(255,255,255,0.05)';
-        roundRect(ctx, cardX, y, cardW, cardH, 28, true, false);
-        ctx.fillStyle = accent;
-        ctx.font = '500 28px "Noto Sans KR", system-ui, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(badge, cardX + 40, y + 60);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '700 110px "Noto Sans KR", system-ui, sans-serif';
-        ctx.fillText(big, cardX + 40, y + 175);
-        ctx.fillStyle = 'rgba(255,255,255,0.75)';
-        ctx.font = '500 38px "Noto Sans KR", system-ui, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(small, cardX + cardW - 40, y + 175);
-        y += cardH + 30;
+    // ---- Per-section palettes (each section gets its own gradient identity) ----
+    // displayIndex is the canonical "chapter number" — used for BOTH eyebrow label
+    // and the giant faint numeral. Keeps single-card modes (e.g. instinct-only)
+    // from contradicting themselves.
+    const PALETTES = {
+        mbti:       { a: '#7CF5FF', b: '#A78BFA', c: '#F472B6', tag: 'PERSONA',  displayIndex: 1, ko: '성격 유형' },
+        enneagram:  { a: '#FFD479', b: '#FF8FA3', c: '#C084FC', tag: 'PATTERN',  displayIndex: 2, ko: '에니어그램' },
+        instinct:   { a: '#FF9A6B', b: '#FF5E87', c: '#7C5CFF', tag: 'INSTINCT', displayIndex: 3, ko: '본능 변형' }
     };
 
+    // Collect active sections in display order so spacing adapts to 1/2/3 cards
+    const sections = [];
     if (showMBTI) {
-        const t = document.getElementById('result-mbti-type')?.textContent || getMBTIType();
-        const n = document.getElementById('result-mbti-name')?.textContent || '';
-        drawCard('📊 MBTI', t, n, '#4facfe');
+        const t = (document.getElementById('result-mbti-type')?.textContent || (typeof getMBTIType === 'function' ? getMBTIType() : 'INFP') || '').trim();
+        const n = (document.getElementById('result-mbti-name')?.textContent || '').trim();
+        sections.push({ key: 'mbti', big: t, small: n, palette: PALETTES.mbti, ko: '성격 유형' });
     }
     if (showEnneagram) {
-        const t = document.getElementById('result-enneagram-type')?.textContent || String(getEnneagramType());
-        const n = document.getElementById('result-enneagram-name')?.textContent || '';
-        drawCard('💜 Enneagram', `${t}번`, n, '#a18cd1');
+        let t = (document.getElementById('result-enneagram-type')?.textContent || (typeof getEnneagramType === 'function' ? String(getEnneagramType()) : '4') || '').trim();
+        // Display just the digit prominently; suffix handled separately
+        const n = (document.getElementById('result-enneagram-name')?.textContent || '').trim();
+        sections.push({ key: 'enneagram', big: t, suffix: '번', small: n, palette: PALETTES.enneagram, ko: '에니어그램' });
     }
     if (showInstinct) {
-        const t = document.getElementById('result-instinct-type')?.textContent || '';
-        const n = document.getElementById('result-instinct-name')?.textContent || '';
-        drawCard('🔥 본능 유형', t, n, '#fd79a8');
+        const t = (document.getElementById('result-instinct-type')?.textContent || '').trim();
+        const n = (document.getElementById('result-instinct-name')?.textContent || '').trim();
+        sections.push({ key: 'instinct', big: t, small: n, palette: PALETTES.instinct, ko: '본능 변형' });
     }
 
-    // Footer
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = '400 28px "Noto Sans KR", system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('✨ 실시간 성격 테스트', W / 2, H - 80);
+    // ============================================================
+    //  LAYER 1 — Background: deep night canvas with cosmic gradient
+    // ============================================================
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0,    '#0A0A1F');
+    bg.addColorStop(0.45, '#11102B');
+    bg.addColorStop(0.85, '#180B33');
+    bg.addColorStop(1,    '#0D0820');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // ============================================================
+    //  LAYER 2 — Aurora orbs (large blurred radial gradients)
+    //  These are the signature decoration — they float behind cards
+    // ============================================================
+    drawAuroraOrb(ctx, -120, 180, 620, ['rgba(124,245,255,0.45)','rgba(124,245,255,0)']);
+    drawAuroraOrb(ctx, W + 140, 520, 720, ['rgba(244,114,182,0.42)','rgba(244,114,182,0)']);
+    drawAuroraOrb(ctx, 540, H + 80, 780, ['rgba(167,139,250,0.50)','rgba(167,139,250,0)']);
+    drawAuroraOrb(ctx, 880, 1080, 360, ['rgba(255,212,121,0.28)','rgba(255,212,121,0)']);
+
+    // ============================================================
+    //  LAYER 3 — Subtle grain + faint scanlines for tactile editorial depth
+    // ============================================================
+    drawGrain(ctx, W, H, 0.08);
+    drawScanlines(ctx, W, H);
+
+    // ============================================================
+    //  LAYER 4 — Header band (asymmetric — tall index numeral + brand)
+    // ============================================================
+    drawHeader(ctx, W);
+
+    // ============================================================
+    //  LAYER 5 — Cards (asymmetric, magazine-style)
+    // ============================================================
+    // Vertical layout: header to ~H-180 (footer area).
+    const topY = 320;
+    const bottomY = H - 180;
+    const trackH = bottomY - topY;
+    const gap = sections.length >= 3 ? 22 : 30;
+    // Card height: comfortable for 3, taller for 1–2 to avoid sparseness.
+    // Single-card mode gets a poster-tall card (~800) plus a lookalike row drawn beneath.
+    const maxCardH = sections.length >= 3 ? 290
+                    : sections.length === 2 ? 380
+                    : 800;
+    const cardH = Math.min(maxCardH, (trackH - gap * (sections.length - 1)) / Math.max(1, sections.length));
+    const totalH = cardH * sections.length + gap * (sections.length - 1);
+    const startY = topY + (trackH - totalH) / 2;
+
+    sections.forEach((s, i) => {
+        const cy = startY + i * (cardH + gap);
+        drawResultCard(ctx, 70, cy, W - 140, cardH, s, i, sections.length);
+    });
+
+    // ============================================================
+    //  LAYER 6 — Footer (Toss-style minimal signature)
+    // ============================================================
+    drawFooter(ctx, W, H);
 
     return canvas;
+}
+
+// ---------------- Helpers (kept local to result-card section) ----------------
+
+function drawAuroraOrb(ctx, cx, cy, r, stops) {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, stops[0]);
+    g.addColorStop(1, stops[1]);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawGrain(ctx, W, H, alpha) {
+    // Fine speckle — visible-at-Instagram-scale density + mixed dark/light specks
+    // for tactile newsprint feel (instead of pure white sparkle).
+    ctx.save();
+    // Seeded pseudo-random so output is reproducible
+    let s = 7;
+    const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    for (let i = 0; i < 4200; i++) {
+        const x = rand() * W;
+        const y = rand() * H;
+        const sz = rand() * 1.8 + 0.4;
+        const light = rand() > 0.4;
+        ctx.globalAlpha = (light ? alpha : alpha * 0.85);
+        ctx.fillStyle = light ? '#ffffff' : '#000000';
+        ctx.fillRect(x, y, sz, sz);
+    }
+    ctx.restore();
+}
+
+// Faint diagonal scanline striations — editorial / scanned-print feel.
+// Very subtle: only visible on close inspection, not a moiré pattern.
+function drawScanlines(ctx, W, H) {
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    // ~3px gaps, drawn as horizontal hairlines across the canvas.
+    for (let yy = 0; yy < H; yy += 3) {
+        ctx.beginPath();
+        ctx.moveTo(0, yy + 0.5);
+        ctx.lineTo(W, yy + 0.5);
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawHeader(ctx, W) {
+    // Tiny eyebrow label, top-left
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '600 22px "Noto Sans KR", system-ui, sans-serif';
+    // letter-spacing emulation
+    drawSpacedText(ctx, 'PERSONALITY  REPORT', 80, 130, 4.5);
+
+    // Brand wordmark (huge but light)
+    ctx.fillStyle = 'rgba(255,255,255,0.96)';
+    ctx.font = '800 76px "Noto Sans KR", system-ui, sans-serif';
+    ctx.fillText('나의 페르소나', 80, 222);
+
+    // Date / signature pill on top-right
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(2);
+    const dateStr = `${yy}.${mm}.${dd}`;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '500 24px "Noto Sans KR", system-ui, sans-serif';
+    ctx.fillText(dateStr, W - 80, 130);
+
+    // Tiny status dot — single-pass with shadow glow, no double-stamp smear
+    const dotX = W - 80 - ctx.measureText(dateStr).width - 22;
+    ctx.save();
+    ctx.fillStyle = '#7CF5FF';
+    ctx.shadowColor = '#7CF5FF';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.arc(dotX, 122, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Gradient hairline divider under header
+    const lineY = 268;
+    const lg = ctx.createLinearGradient(80, lineY, W - 80, lineY);
+    lg.addColorStop(0,   'rgba(255,255,255,0)');
+    lg.addColorStop(0.25,'rgba(124,245,255,0.5)');
+    lg.addColorStop(0.55,'rgba(167,139,250,0.5)');
+    lg.addColorStop(0.85,'rgba(244,114,182,0.5)');
+    lg.addColorStop(1,   'rgba(255,255,255,0)');
+    ctx.strokeStyle = lg;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(80, lineY);
+    ctx.lineTo(W - 80, lineY);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawResultCard(ctx, x, y, w, h, section, index, totalSections) {
+    const r = 36;
+    const p = section.palette;
+
+    // Layout mode flags — drives every internal spacing decision
+    const compact = h < 320;      // 3-card mode
+    const poster  = totalSections === 1; // single-card poster mode
+    // Equal side padding (eyebrow left, descriptor right, big type left)
+    const PAD = 56;
+    const contentX = x + PAD;
+
+    ctx.save();
+
+    // ---- Soft outer glow drop shadow ----
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 40;
+    ctx.shadowOffsetY = 20;
+
+    // ---- Card body: glassmorphism (stronger tint + darken pass for edge definition) ----
+    // First, a slightly dark "frosted glass" base so edges read against the night BG.
+    ctx.fillStyle = 'rgba(20,15,40,0.28)';
+    roundRect(ctx, x, y, w, h, r, true, false);
+
+    // Reset shadow so the white tint above doesn't double-shadow.
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    const cardGrad = ctx.createLinearGradient(x, y, x, y + h);
+    cardGrad.addColorStop(0, 'rgba(255,255,255,0.14)');
+    cardGrad.addColorStop(1, 'rgba(255,255,255,0.06)');
+    ctx.fillStyle = cardGrad;
+    roundRect(ctx, x, y, w, h, r, true, false);
+
+    // ---- Inner accent radial orb anchored to right edge (per-section color) ----
+    ctx.save();
+    ctx.beginPath();
+    roundRect(ctx, x, y, w, h, r, false, false);
+    ctx.clip();
+
+    const orbR = h * 1.1;
+    const orbCx = x + w + 60;
+    const orbCy = y + h * 0.55;
+    const orb = ctx.createRadialGradient(orbCx, orbCy, 0, orbCx, orbCy, orbR);
+    orb.addColorStop(0,   hexToRgba(p.a, 0.55));
+    orb.addColorStop(0.45, hexToRgba(p.b, 0.38));
+    orb.addColorStop(1,   hexToRgba(p.c, 0));
+    ctx.fillStyle = orb;
+    ctx.fillRect(x, y, w, h);
+
+    // Subtle secondary orb on opposite corner
+    const orb2 = ctx.createRadialGradient(x - 40, y - 40, 0, x - 40, y - 40, h * 0.9);
+    orb2.addColorStop(0, hexToRgba(p.c, 0.32));
+    orb2.addColorStop(1, hexToRgba(p.c, 0));
+    ctx.fillStyle = orb2;
+    ctx.fillRect(x, y, w, h);
+
+    // ---- Index numeral (huge, faint) — drawn INSIDE the clip so it can clip off
+    // the right edge in 3-card mode for that "Toss recap" partial-bleed feel.
+    // Use displayIndex (1/2/3) — consistent with eyebrow label, regardless of mode.
+    {
+        ctx.save();
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        let idxSize, idxX, idxY;
+        if (compact) {
+            // 3-card mode: shrink AND shift off the right edge so it bleeds out
+            idxSize = 150;
+            idxX = x + w + 28;     // clip past the card edge
+            idxY = y + h * 0.62;
+        } else if (poster) {
+            // Poster mode: large but not overwhelming, anchored mid-card
+            idxSize = 240;
+            idxX = x + w - 44;
+            idxY = y + h * 0.55;
+        } else {
+            // 2-card mode: comfortable middle ground
+            idxSize = Math.round(Math.min(220, Math.max(170, h * 0.6)));
+            idxX = x + w - 44;
+            idxY = y + h * 0.54;
+        }
+        ctx.font = `200 ${idxSize}px "Noto Sans KR", system-ui, sans-serif`;
+        const idxGrad = ctx.createLinearGradient(0, y, 0, y + h);
+        idxGrad.addColorStop(0, hexToRgba(p.a, 0.22));
+        idxGrad.addColorStop(1, hexToRgba(p.c, 0.05));
+        ctx.fillStyle = idxGrad;
+        ctx.fillText(String(p.displayIndex).padStart(2, '0'), idxX, idxY);
+        ctx.restore();
+    }
+
+    // 1px inner glass border (all four sides, not just top)
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, r - 0.5, false, true);
+
+    // Subtle top-edge highlight on top of the border
+    const hi = ctx.createLinearGradient(x, y, x, y + Math.min(h * 0.5, 200));
+    hi.addColorStop(0, 'rgba(255,255,255,0.45)');
+    hi.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = hi;
+    ctx.lineWidth = 1.2;
+    roundRect(ctx, x + 0.6, y + 0.6, w - 1.2, h - 1.2, r - 0.6, false, true);
+
+    ctx.restore();
+
+    // ---- Left rail: vertical gradient bar (signature) ----
+    const railX = x + 28;
+    const railY = y + 36;
+    const railH = h - 72;
+    const railG = ctx.createLinearGradient(railX, railY, railX, railY + railH);
+    railG.addColorStop(0, p.a);
+    railG.addColorStop(0.55, p.b);
+    railG.addColorStop(1, p.c);
+    ctx.fillStyle = railG;
+    roundRect(ctx, railX, railY, 5, railH, 3, true, false);
+
+    // Glow under rail
+    ctx.save();
+    ctx.shadowColor = hexToRgba(p.b, 0.7);
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = railG;
+    roundRect(ctx, railX, railY, 5, railH, 3, true, false);
+    ctx.restore();
+
+    // ---- Eyebrow label (tiny, tracked-out) — derived from displayIndex ----
+    const eyebrowY = compact ? (y + 44) : (y + 62);
+    const koY      = compact ? (y + 74) : (y + 100);
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = '600 20px "Noto Sans KR", system-ui, sans-serif';
+    const eyebrow = `${p.tag} · ${String(p.displayIndex).padStart(2, '0')}`;
+    drawSpacedText(ctx, eyebrow, contentX, eyebrowY, 3.5);
+
+    // ---- Korean section name (medium weight) ----
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.font = `500 ${compact ? 26 : 30}px "Noto Sans KR", system-ui, sans-serif`;
+    ctx.fillText(section.ko, contentX, koY);
+
+    // ---- BIG type: gradient-filled, ultra-heavy weight ----
+    const big = section.big || '';
+    const suffix = section.suffix || '';
+    // fitBigTypeSize ceiling depends on layout mode.
+    const fitCeil = compact ? 110 : (poster ? 220 : 168);
+    const bigSize = fitBigTypeSize(ctx, big, w - (PAD * 2 + (poster ? 0 : 200)), fitCeil);
+    ctx.font = `900 ${bigSize}px "Noto Sans KR", system-ui, sans-serif`;
+    // Big type baseline: in compact mode push UP to avoid crowding bottom edge.
+    const bigBaseline = compact ? (y + h - 78)
+                       : poster ? (y + h * 0.62)
+                       : (y + h - 60);
+    const tg = ctx.createLinearGradient(contentX, bigBaseline - bigSize, contentX + 600, bigBaseline);
+    tg.addColorStop(0, p.a);
+    tg.addColorStop(0.5, '#FFFFFF');
+    tg.addColorStop(1, p.c);
+    ctx.fillStyle = tg;
+    // glow behind type
+    ctx.save();
+    ctx.shadowColor = hexToRgba(p.b, 0.55);
+    ctx.shadowBlur = 30;
+    ctx.fillText(big, contentX, bigBaseline);
+    ctx.restore();
+
+    // Suffix (e.g. "번") — share baseline with big numeral
+    if (suffix) {
+        const bigW = ctx.measureText(big).width;
+        const suffixSize = compact ? 30 : (poster ? 56 : 42);
+        ctx.font = `300 ${suffixSize}px "Noto Sans KR", system-ui, sans-serif`;
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        // Sit on the same baseline as the big type (optical, very slight lift handled by font metrics).
+        ctx.fillText(suffix, contentX + bigW + 14, bigBaseline);
+    }
+
+    // ---- Small descriptor name on right side ----
+    if (section.small) {
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        const descSize = compact ? 28 : 34;
+        ctx.font = `600 ${descSize}px "Noto Sans KR", system-ui, sans-serif`;
+        // Right padding matches left padding
+        const descX = x + w - PAD;
+        const descY = compact ? (y + 50) : (y + 92);
+        ctx.fillText(section.small, descX, descY);
+
+        // Underline accent — tiny gradient line under the descriptor
+        const nW = Math.min(ctx.measureText(section.small).width, 280);
+        const ulX = descX - nW;
+        const ulY = descY + (compact ? 10 : 16);
+        const ul = ctx.createLinearGradient(ulX, ulY, ulX + nW, ulY);
+        ul.addColorStop(0, hexToRgba(p.a, 0));
+        ul.addColorStop(0.5, hexToRgba(p.b, 0.9));
+        ul.addColorStop(1, hexToRgba(p.c, 0));
+        ctx.strokeStyle = ul;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ulX, ulY);
+        ctx.lineTo(ulX + nW, ulY);
+        ctx.stroke();
+    }
+
+    // ---- Poster-mode extras: lookalike avatar row + tag chips ---------
+    // Fills the vertical space that would otherwise read as orphaned canvas.
+    if (poster) {
+        drawLookalikeRow(ctx, contentX, y + h * 0.78, p, section);
+        drawTagChips(ctx, contentX, y + h - 80, p, section);
+    }
+
+    ctx.restore();
+}
+
+function fitBigTypeSize(ctx, text, maxWidth, ceiling) {
+    // Start large, shrink until it fits. Ceiling is layout-dependent:
+    //  - 3-card compact: ~110
+    //  - 2-card: ~168
+    //  - 1-card poster: ~220
+    let size = ceiling || 156;
+    const floor = Math.min(80, Math.floor(size * 0.55));
+    while (size > floor) {
+        ctx.font = `900 ${size}px "Noto Sans KR", system-ui, sans-serif`;
+        if (ctx.measureText(text).width <= maxWidth) return size;
+        size -= 4;
+    }
+    return size;
+}
+
+// ---- Poster-mode decoration: row of 3 gradient-filled lookalike avatars ----
+// Pure decoration, but it sells the "your tribe" idea and fills the
+// otherwise-empty lower half of the poster card. The initials are derived
+// from the section big-type or section.ko so they feel earned, not random.
+function drawLookalikeRow(ctx, x, y, palette, section) {
+    ctx.save();
+    // Label above the row — small, all-caps, tracked
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = '600 16px "Noto Sans KR", system-ui, sans-serif';
+    drawSpacedText(ctx, 'LOOKALIKES', x, y - 18, 3.0);
+
+    // Derive 3 distinct "initials" from section data — deterministic stub avatars.
+    const seed = `${section.key}-${section.big}-${section.small}`;
+    const palettes = [
+        [palette.a, palette.b],
+        [palette.b, palette.c],
+        [palette.c, palette.a]
+    ];
+    const initials = pickAvatarInitials(seed);
+
+    const R = 42;          // radius
+    const stepX = R * 2 + 18;
+    let cx = x + R;
+    const cy = y + R + 6;
+
+    for (let i = 0; i < 3; i++) {
+        // Disc fill with per-avatar gradient
+        const g = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+        g.addColorStop(0, palettes[i][0]);
+        g.addColorStop(1, palettes[i][1]);
+        // Subtle glow
+        ctx.save();
+        ctx.shadowColor = hexToRgba(palette.b, 0.45);
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Ring stroke
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, R, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Initials inside
+        ctx.fillStyle = 'rgba(15,10,28,0.85)';
+        ctx.font = '800 28px "Noto Sans KR", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(initials[i], cx, cy + 2);
+
+        cx += stepX;
+    }
+    ctx.restore();
+}
+
+// ---- Poster-mode decoration: faux tag chips beneath the lookalikes ----
+function drawTagChips(ctx, x, y, palette, section) {
+    // Tags derived from section identity — short, evocative.
+    const TAG_LIBRARY = {
+        mbti:      ['감정형', '아이디어 메이커', '조용한 몰입'],
+        enneagram: ['깊은 감수성', '독자성', '의미 추적자'],
+        instinct:  ['일대일 본능', '강렬한 연결', '집중과 몰입']
+    };
+    const tags = TAG_LIBRARY[section.key] || ['고유함', '깊이', '몰입'];
+
+    ctx.save();
+    ctx.textBaseline = 'middle';
+    ctx.font = '500 19px "Noto Sans KR", system-ui, sans-serif';
+
+    let cx = x;
+    const cy = y;
+    const padX = 16, padY = 9;
+    const gap = 10;
+
+    for (const tag of tags) {
+        const tw = ctx.measureText(tag).width;
+        const chipW = tw + padX * 2;
+        const chipH = 38;
+
+        // Chip background: faint glass with palette tint
+        ctx.fillStyle = hexToRgba(palette.b, 0.12);
+        roundRect(ctx, cx, cy - chipH / 2, chipW, chipH, chipH / 2, true, false);
+        ctx.strokeStyle = hexToRgba(palette.a, 0.35);
+        ctx.lineWidth = 1;
+        roundRect(ctx, cx + 0.5, cy - chipH / 2 + 0.5, chipW - 1, chipH - 1, (chipH - 1) / 2, false, true);
+
+        // Tag text
+        ctx.fillStyle = 'rgba(255,255,255,0.86)';
+        ctx.textAlign = 'left';
+        ctx.fillText(tag, cx + padX, cy + 1);
+
+        cx += chipW + gap;
+    }
+    ctx.restore();
+}
+
+// Deterministic 3 sets of initials from a seed string. ASCII only so we don't
+// accidentally render glyphs that the fallback fonts don't ship.
+function pickAvatarInitials(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xffffffff;
+    const POOL = ['MJ','SY','KH','JW','HR','EJ','DK','TY','NH','RE','BL','AV','SN','IL'];
+    const out = [];
+    for (let i = 0; i < 3; i++) {
+        h = (h * 1103515245 + 12345) & 0x7fffffff;
+        out.push(POOL[h % POOL.length]);
+    }
+    // Dedupe — if any collision, walk forward.
+    for (let i = 1; i < out.length; i++) {
+        let guard = 0;
+        while (out.slice(0, i).includes(out[i]) && guard++ < POOL.length) {
+            out[i] = POOL[(POOL.indexOf(out[i]) + 1) % POOL.length];
+        }
+    }
+    return out;
+}
+
+function drawSpacedText(ctx, text, x, y, spacing) {
+    // Manual letter-spacing — Canvas has no native equivalent in all browsers
+    let cx = x;
+    for (const ch of text) {
+        ctx.fillText(ch, cx, y);
+        cx += ctx.measureText(ch).width + spacing;
+    }
+}
+
+function hexToRgba(hex, a) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+
+function drawFooter(ctx, W, H) {
+    ctx.save();
+    // Hairline gradient divider
+    const ly = H - 110;
+    const lg = ctx.createLinearGradient(80, ly, W - 80, ly);
+    lg.addColorStop(0,   'rgba(255,255,255,0)');
+    lg.addColorStop(0.5, 'rgba(255,255,255,0.25)');
+    lg.addColorStop(1,   'rgba(255,255,255,0)');
+    ctx.strokeStyle = lg;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(80, ly);
+    ctx.lineTo(W - 80, ly);
+    ctx.stroke();
+
+    // Brand mark (left) + handle/CTA (right)
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '700 26px "Noto Sans KR", system-ui, sans-serif';
+    ctx.fillText('PERSONA.LAB', 80, H - 60);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.font = '500 22px "Noto Sans KR", system-ui, sans-serif';
+    // Replaced the generic Korean CTA with a handle — feels like a publication
+    // mark rather than a stock share prompt.
+    ctx.fillText('@persona.lab', W - 80, H - 60);
+    ctx.restore();
 }
 
 function roundRect(ctx, x, y, w, h, r, fill, stroke) {
