@@ -12,7 +12,7 @@ UI strings, question text, and result names are in Korean — preserve the exist
 
 ```bash
 # Run all unit tests (Node's built-in runner — no Jest/Mocha)
-node --test
+npm test            # alias for `node --test`
 
 # Run a single test file
 node --test applyMBTIScore.test.js
@@ -21,7 +21,7 @@ node --test applyMBTIScore.test.js
 npm install
 
 # Run the showScreen() micro-benchmark
-node benchmark.js
+npm run benchmark   # alias for `node benchmark.js`
 ```
 
 There is no lint, build, or dev-server command. To preview the app, open `index.html` in a browser or serve the directory with any static server (e.g. `npx serve`).
