@@ -245,7 +245,7 @@
                 </div>
 
                 <!-- MBTI Visualization -->
-                <div id="mbti-viz" class="viz-content">
+                <div id="mbti-viz" class="viz-content" aria-live="polite" aria-atomic="true">
                     <div class="current-type">
                         <span class="type-label">현재 예상 유형</span>
                         <span class="type-value" id="current-mbti-type">----</span>
@@ -315,7 +315,7 @@
                 </div>
 
                 <!-- Enneagram Visualization -->
-                <div id="enneagram-viz" class="viz-content" style="display: none;">
+                <div id="enneagram-viz" class="viz-content" style="display: none;" aria-live="polite" aria-atomic="true">
                     <div class="current-type">
                         <span class="type-label">현재 예상 유형</span>
                         <span class="type-value enneagram-type" id="current-enneagram-type">?번 유형</span>
@@ -416,7 +416,7 @@
                 </div>
 
                 <!-- Instinct Visualization -->
-                <div id="instinct-viz" class="viz-content" style="display: none;">
+                <div id="instinct-viz" class="viz-content" style="display: none;" aria-live="polite" aria-atomic="true">
                     <div class="current-type">
                         <span class="type-label">현재 예상 본능 유형</span>
                         <span class="type-value instinct-type" id="current-instinct-type">? 유형</span>
@@ -479,9 +479,9 @@
                 </button>
                 <div class="test-type-badge">본능 월드컵 🏆</div>
             </div>
-            <h2 class="tournament-round" id="tournament-round">16강 · 1/8</h2>
+            <h2 class="tournament-round" id="tournament-round" aria-live="polite" aria-atomic="true">16강 · 1/8</h2>
             <p class="tournament-prompt" style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">둘 중 더 끌리는 쪽을 골라주세요</p>
-            <div class="tournament-matchup" id="tournament-matchup">
+            <div class="tournament-matchup" id="tournament-matchup" aria-live="polite" aria-atomic="true">
                 <button class="tournament-card" id="tournament-left" type="button" onclick="pickTournamentSide('left')">
                     <span class="tournament-emoji" id="tournament-left-emoji">🏠</span>
                     <span class="tournament-text" id="tournament-left-text"></span>
