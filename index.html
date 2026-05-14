@@ -36,7 +36,7 @@
                 <button class="test-card" onclick="startTest('mbti')">
                     <div class="card-glow mbti-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">🎭</div>
+                        <div class="card-icon" aria-hidden="true">🎭</div>
                         <h2>MBTI 테스트</h2>
                         <p>16가지 성격 유형 중 나는 어디에 속할까?</p>
                         <div class="card-meta">
@@ -52,7 +52,7 @@
                 <button class="test-card" onclick="startTest('enneagram')">
                     <div class="card-glow enneagram-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">💜</div>
+                        <div class="card-icon" aria-hidden="true">💜</div>
                         <h2>Enneagram 테스트</h2>
                         <p>9가지 성격 유형으로 알아보는 내면의 세계</p>
                         <div class="card-meta">
@@ -68,7 +68,7 @@
                 <button class="test-card" onclick="startTest('instinct')">
                     <div class="card-glow instinct-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">🔥</div>
+                        <div class="card-icon" aria-hidden="true">🔥</div>
                         <h2>본능 유형 테스트</h2>
                         <p>SP/SO/SX 본능적 변형으로 에니어그램 하위유형 발견</p>
                         <div class="card-meta">
@@ -84,7 +84,7 @@
                 <button class="test-card" onclick="startTest('both')">
                     <div class="card-glow both-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">✨</div>
+                        <div class="card-icon" aria-hidden="true">✨</div>
                         <h2>통합 테스트</h2>
                         <p>MBTI와 Enneagram을 함께 분석해 성격 프로필 완성</p>
                         <div class="card-meta">
@@ -97,7 +97,7 @@
                 <button class="test-card full-test" onclick="startTest('complete')">
                     <div class="card-glow complete-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">🌟</div>
+                        <div class="card-icon" aria-hidden="true">🌟</div>
                         <h2>완전 통합 테스트</h2>
                         <p>MBTI + Enneagram + 본능 유형을 모두 분석해 가장 완벽한 성격 프로필을 만들어보세요</p>
                         <div class="card-meta">
@@ -113,7 +113,7 @@
                 <button class="test-card full-test yesno-test" onclick="startTest('mbti-yesno')">
                     <div class="card-glow yesno-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">⚡</div>
+                        <div class="card-icon" aria-hidden="true">⚡</div>
                         <h2>MBTI 빠른 테스트</h2>
                         <p>YES / NO 선택으로 더 빠르게! 직관적인 이분법 테스트</p>
                         <div class="card-meta">
@@ -129,7 +129,7 @@
                 <button class="test-card scenario-test" onclick="startTest('mbti-scenario')">
                     <div class="card-glow scenario-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">🎬</div>
+                        <div class="card-icon" aria-hidden="true">🎬</div>
                         <h2>시나리오 MBTI 테스트</h2>
                         <p>밋밋한 5점 척도 대신, 실제 상황에서 어떻게 행동할지 골라보세요</p>
                         <div class="card-meta">
@@ -145,7 +145,7 @@
                 <button class="test-card tournament-test" onclick="startTest('tournament')">
                     <div class="card-glow tournament-glow"></div>
                     <div class="card-content">
-                        <div class="card-icon">🏆</div>
+                        <div class="card-icon" aria-hidden="true">🏆</div>
                         <h2>본능 월드컵</h2>
                         <p>이상형 월드컵 스타일! 16강에서 결승까지 둘 중 끌리는 쪽을 선택</p>
                         <div class="card-meta">
@@ -174,7 +174,7 @@
             <div class="question-panel">
                 <div class="test-header">
                     <button class="back-btn" onclick="goToStart()">
-                        <span>←</span> 처음으로
+                        <span aria-hidden="true">←</span> 처음으로
                     </button>
                     <div class="test-type-badge" id="test-type-badge">MBTI</div>
                 </div>
@@ -425,7 +425,7 @@
                     <div class="instinct-bars">
                         <div class="instinct-bar-item" data-instinct="SP">
                             <div class="instinct-info">
-                                <span class="instinct-icon">🏠</span>
+                                <span class="instinct-icon" aria-hidden="true">🏠</span>
                                 <span class="instinct-name">자기보존 (SP)</span>
                             </div>
                             <div class="instinct-bar">
@@ -435,7 +435,7 @@
                         </div>
                         <div class="instinct-bar-item" data-instinct="SO">
                             <div class="instinct-info">
-                                <span class="instinct-icon">👥</span>
+                                <span class="instinct-icon" aria-hidden="true">👥</span>
                                 <span class="instinct-name">사회형 (SO)</span>
                             </div>
                             <div class="instinct-bar">
@@ -445,7 +445,7 @@
                         </div>
                         <div class="instinct-bar-item" data-instinct="SX">
                             <div class="instinct-info">
-                                <span class="instinct-icon">🔥</span>
+                                <span class="instinct-icon" aria-hidden="true">🔥</span>
                                 <span class="instinct-name">일대일형 (SX)</span>
                             </div>
                             <div class="instinct-bar">
@@ -475,7 +475,7 @@
         <div class="tournament-container">
             <div class="test-header" style="justify-content: space-between; max-width: 800px; margin: 0 auto var(--spacing-lg);">
                 <button class="back-btn" onclick="goToStart()">
-                    <span>←</span> 처음으로
+                    <span aria-hidden="true">←</span> 처음으로
                 </button>
                 <div class="test-type-badge">본능 월드컵 🏆</div>
             </div>
@@ -483,12 +483,12 @@
             <p class="tournament-prompt" style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">둘 중 더 끌리는 쪽을 골라주세요</p>
             <div class="tournament-matchup" id="tournament-matchup">
                 <button class="tournament-card" id="tournament-left" type="button" onclick="pickTournamentSide('left')">
-                    <span class="tournament-emoji" id="tournament-left-emoji">🏠</span>
+                    <span class="tournament-emoji" id="tournament-left-emoji" aria-hidden="true">🏠</span>
                     <span class="tournament-text" id="tournament-left-text"></span>
                 </button>
                 <div class="tournament-vs">VS</div>
                 <button class="tournament-card" id="tournament-right" type="button" onclick="pickTournamentSide('right')">
-                    <span class="tournament-emoji" id="tournament-right-emoji">🔥</span>
+                    <span class="tournament-emoji" id="tournament-right-emoji" aria-hidden="true">🔥</span>
                     <span class="tournament-text" id="tournament-right-text"></span>
                 </button>
             </div>
@@ -542,7 +542,7 @@
                 <div class="result-card instinct-result" id="instinct-result" style="display: none;">
                     <div class="result-type-badge">본능 유형</div>
                     <div class="result-type-display">
-                        <span class="result-type-icon" id="result-instinct-icon">🔥</span>
+                        <span class="result-type-icon" id="result-instinct-icon" aria-hidden="true">🔥</span>
                         <span class="result-type-value instinct" id="result-instinct-type">SX</span>
                         <span class="result-type-name" id="result-instinct-name">일대일형</span>
                     </div>
@@ -570,13 +570,13 @@
 
             <div class="result-actions">
                 <button class="action-btn primary" onclick="goToStart()">
-                    <span>🔄</span> 다시 테스트하기
+                    <span aria-hidden="true">🔄</span> 다시 테스트하기
                 </button>
                 <button class="action-btn secondary" onclick="downloadResultCard()">
-                    <span>🖼️</span> 이미지로 저장
+                    <span aria-hidden="true">🖼️</span> 이미지로 저장
                 </button>
                 <button class="action-btn secondary" onclick="shareResult()">
-                    <span>📤</span> 텍스트 공유
+                    <span aria-hidden="true">📤</span> 텍스트 공유
                 </button>
             </div>
         </div>
