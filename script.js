@@ -948,6 +948,32 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const handleShareFeedback = (isSuccess, text = '') => {
+        const shareBtn = document.getElementById('share-btn');
+        if (!shareBtn) {
+            if (!isSuccess && text) alert(text);
+            return;
+        }
+
+        const originalContent = shareBtn.innerHTML;
+        shareBtn.disabled = true;
+
+        const iconSpan = document.createElement('span');
+        iconSpan.setAttribute('aria-hidden', 'true');
+        iconSpan.textContent = isSuccess ? '✅ ' : '❌ ';
+
+        const textNode = document.createTextNode(isSuccess ? '복사 완료!' : '복사 실패');
+
+        shareBtn.innerHTML = '';
+        shareBtn.appendChild(iconSpan);
+        shareBtn.appendChild(textNode);
+
+        setTimeout(() => {
+            shareBtn.innerHTML = originalContent;
+            shareBtn.disabled = false;
+        }, 2000);
+    };
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
@@ -956,9 +982,9 @@ function shareResult() {
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
+            handleShareFeedback(true);
         }).catch(() => {
-            alert(shareText);
+            handleShareFeedback(false, shareText);
         });
     }
 }

@@ -570,13 +570,13 @@
 
             <div class="result-actions">
                 <button class="action-btn primary" onclick="goToStart()">
-                    <span>🔄</span> 다시 테스트하기
+                    <span aria-hidden="true">🔄</span> 다시 테스트하기
                 </button>
                 <button class="action-btn secondary" onclick="downloadResultCard()">
-                    <span>🖼️</span> 이미지로 저장
+                    <span aria-hidden="true">🖼️</span> 이미지로 저장
                 </button>
-                <button class="action-btn secondary" onclick="shareResult()">
-                    <span>📤</span> 텍스트 공유
+                <button class="action-btn secondary" id="share-btn" onclick="shareResult()">
+                    <span aria-hidden="true">📤</span> 텍스트 공유
                 </button>
             </div>
         </div>
