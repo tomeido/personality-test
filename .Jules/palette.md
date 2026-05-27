@@ -1,3 +1,3 @@
-## 2024-05-05 - Dynamic Content Accessibility
-**Learning:** In vanilla JavaScript SPAs where content updates dynamically (like a quiz UI), screen readers are unaware of the DOM changes.
-**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element of dynamic content so that screen readers can announce the updates gracefully without requiring a page reload.
+## 2024-05-24 - Inline Clipboard Feedback
+**Learning:** Using native `alert()` for clipboard copy confirmation creates a jarring UX and disrupts keyboard focus and screen reader continuity.
+**Action:** Replace `alert()` with inline state changes on the trigger element (e.g., "✅ 복사 완료!"), disabling the button temporarily, and restoring original DOM structure after a timeout to provide smooth, accessible feedback.
