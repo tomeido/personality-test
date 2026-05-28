@@ -922,7 +922,8 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
+    const btn = event ? event.currentTarget : null;
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -955,11 +956,45 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        if (btn) {
+            const originalNodes = Array.from(btn.childNodes).map(n => n.cloneNode(true));
+            btn.innerHTML = '';
+            btn.disabled = true;
+
+            const copyingText = document.createElement('span');
+            copyingText.textContent = '복사중...';
+            btn.appendChild(copyingText);
+
+            navigator.clipboard.writeText(shareText).then(() => {
+                btn.innerHTML = '';
+                const successIcon = document.createElement('span');
+                successIcon.setAttribute('aria-hidden', 'true');
+                successIcon.textContent = '✅';
+                const successText = document.createElement('span');
+                successText.textContent = ' 복사 완료!';
+                btn.appendChild(successIcon);
+                btn.appendChild(successText);
+            }).catch(() => {
+                btn.innerHTML = '';
+                const errorIcon = document.createElement('span');
+                errorIcon.setAttribute('aria-hidden', 'true');
+                errorIcon.textContent = '❌';
+                const errorText = document.createElement('span');
+                errorText.textContent = ' 복사 실패';
+                btn.appendChild(errorIcon);
+                btn.appendChild(errorText);
+            }).finally(() => {
+                setTimeout(() => {
+                    btn.innerHTML = '';
+                    originalNodes.forEach(n => btn.appendChild(n));
+                    btn.disabled = false;
+                }, 2000);
+            });
+        } else {
+            navigator.clipboard.writeText(shareText).then(() => {
+                console.log('결과가 클립보드에 복사되었습니다!');
+            }).catch(console.error);
+        }
     }
 }
 
