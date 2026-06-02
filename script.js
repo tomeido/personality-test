@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -955,11 +955,28 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        const btn = event?.currentTarget;
+        if (btn) {
+            // Synchronously capture original state
+            const originalNodes = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+            btn.disabled = true;
+
+            navigator.clipboard.writeText(shareText).then(() => {
+                btn.innerHTML = '';
+                btn.textContent = '✅ 복사 완료!';
+            }).catch(() => {
+                btn.innerHTML = '';
+                btn.textContent = '❌ 복사 실패';
+            }).finally(() => {
+                setTimeout(() => {
+                    btn.innerHTML = '';
+                    originalNodes.forEach(node => btn.appendChild(node));
+                    btn.disabled = false;
+                }, 2000);
+            });
+        } else {
+            navigator.clipboard.writeText(shareText).catch(console.error);
+        }
     }
 }
 
