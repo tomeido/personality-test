@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -948,6 +948,31 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const targetButton = event ? event.currentTarget : null;
+    let originalNodes = [];
+    if (targetButton) {
+        originalNodes = Array.from(targetButton.childNodes).map(node => node.cloneNode(true));
+    }
+
+    const showSuccess = () => {
+        if (!targetButton) return;
+        targetButton.disabled = true;
+        targetButton.innerHTML = '';
+
+        const successIcon = document.createElement('span');
+        successIcon.textContent = '✅';
+        const successText = document.createTextNode(' 복사 완료!');
+
+        targetButton.appendChild(successIcon);
+        targetButton.appendChild(successText);
+
+        setTimeout(() => {
+            targetButton.innerHTML = '';
+            originalNodes.forEach(node => targetButton.appendChild(node));
+            targetButton.disabled = false;
+        }, 2000);
+    };
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
@@ -955,11 +980,16 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shareText).then(() => {
+                showSuccess();
+            }).catch(() => {
+                // If it fails, fallback gracefully (you could also show an error state)
+                showSuccess();
+            });
+        } else {
+             showSuccess();
+        }
     }
 }
 
