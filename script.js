@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -948,6 +948,13 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const targetBtn = event && event.currentTarget;
+    let originalNodes = [];
+    if (targetBtn) {
+        // Clone original nodes synchronously
+        originalNodes = Array.from(targetBtn.childNodes).map(node => node.cloneNode(true));
+    }
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
@@ -955,9 +962,54 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
+        if (targetBtn) {
+            targetBtn.disabled = true;
+            targetBtn.innerHTML = '';
+
+            const loadingSpan = document.createElement('span');
+            loadingSpan.textContent = '⏳';
+            targetBtn.appendChild(loadingSpan);
+
+            const loadingText = document.createTextNode(' 복사 중...');
+            targetBtn.appendChild(loadingText);
+        }
+
         navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
+            if (targetBtn) {
+                targetBtn.innerHTML = '';
+
+                const successSpan = document.createElement('span');
+                successSpan.textContent = '✅';
+                targetBtn.appendChild(successSpan);
+
+                const successText = document.createTextNode(' 복사 완료!');
+                targetBtn.appendChild(successText);
+
+                setTimeout(() => {
+                    targetBtn.innerHTML = '';
+                    originalNodes.forEach(node => targetBtn.appendChild(node));
+                    targetBtn.disabled = false;
+                }, 2000);
+            } else {
+                alert('결과가 클립보드에 복사되었습니다!');
+            }
         }).catch(() => {
+            if (targetBtn) {
+                targetBtn.innerHTML = '';
+
+                const errorSpan = document.createElement('span');
+                errorSpan.textContent = '❌';
+                targetBtn.appendChild(errorSpan);
+
+                const errorText = document.createTextNode(' 복사 실패');
+                targetBtn.appendChild(errorText);
+
+                setTimeout(() => {
+                    targetBtn.innerHTML = '';
+                    originalNodes.forEach(node => targetBtn.appendChild(node));
+                    targetBtn.disabled = false;
+                }, 2000);
+            }
             alert(shareText);
         });
     }
