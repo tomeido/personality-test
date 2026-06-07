@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -955,11 +955,50 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        const btn = event ? event.currentTarget : null;
+        if (btn) {
+            const originalChildren = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+            btn.innerHTML = '';
+            btn.disabled = true;
+
+            const updateButton = (text) => {
+                btn.innerHTML = '';
+                const span = document.createElement('span');
+                span.textContent = text;
+                btn.appendChild(span);
+
+                setTimeout(() => {
+                    btn.innerHTML = '';
+                    originalChildren.forEach(child => btn.appendChild(child));
+                    btn.disabled = false;
+                }, 2000);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    updateButton('✅ 복사 완료!');
+                }).catch(() => {
+                    updateButton('❌ 복사 실패');
+                    console.error("Clipboard write failed");
+                    // Restore alert as fallback if write fails (as per original logic)
+                    setTimeout(() => alert(shareText), 100);
+                });
+            } else {
+                updateButton('❌ 복사 실패');
+                setTimeout(() => alert(shareText), 100);
+            }
+        } else {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    console.log('결과가 클립보드에 복사되었습니다!');
+                }).catch(() => {
+                    console.error("Clipboard write failed");
+                    alert(shareText);
+                });
+            } else {
+                alert(shareText);
+            }
+        }
     }
 }
 
