@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -948,17 +948,48 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const targetButton = event && event.currentTarget ? event.currentTarget : null;
+
+    // Store original state synchronously before any async operations
+    let originalNodes = [];
+    if (targetButton) {
+        originalNodes = Array.from(targetButton.childNodes).map(node => node.cloneNode(true));
+        targetButton.disabled = true;
+    }
+
+    const showInlineFeedback = (isSuccess) => {
+        if (!targetButton) return;
+        targetButton.innerHTML = '';
+        const iconSpan = document.createElement('span');
+        iconSpan.textContent = isSuccess ? '✅' : '❌';
+        iconSpan.setAttribute('aria-hidden', 'true');
+        const textNode = document.createTextNode(isSuccess ? ' 복사 완료!' : ' 복사 실패');
+        targetButton.appendChild(iconSpan);
+        targetButton.appendChild(textNode);
+
+        setTimeout(() => {
+            targetButton.innerHTML = '';
+            originalNodes.forEach(node => targetButton.appendChild(node));
+            targetButton.disabled = false;
+        }, 2000);
+    };
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
             text: shareText
         }).catch(console.error);
+        if (targetButton) {
+            targetButton.disabled = false; // Restore disabled state since native share overlay handles UX
+        }
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
+            showInlineFeedback(true);
         }).catch(() => {
-            alert(shareText);
+            showInlineFeedback(false);
+            // Fallback for extreme cases where clipboard fails completely
+            console.error('Clipboard copy failed:', shareText);
         });
     }
 }

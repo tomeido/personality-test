@@ -1,3 +1,3 @@
-## 2024-05-05 - Dynamic Content Accessibility
-**Learning:** In vanilla JavaScript SPAs where content updates dynamically (like a quiz UI), screen readers are unaware of the DOM changes.
-**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element of dynamic content so that screen readers can announce the updates gracefully without requiring a page reload.
+## 2024-05-24 - [Clipboard Fallback UX]
+**Learning:** Replacing jarring `alert()` dialogs with temporary inline UI updates on the trigger element (like a share button) significantly improves UX by maintaining user context. For accessibility and correctness, the original DOM nodes of the button must be synchronously cloned before any async operation starts (to avoid `event.currentTarget` becoming null) and safely restored later.
+**Action:** Always prefer inline contextual feedback over system alerts for non-critical async actions (like copying to clipboard), ensuring to disable the trigger element temporarily to prevent rapid misclicks and cloning original nodes using safe DOM APIs.
