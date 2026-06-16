@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -955,11 +955,67 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        const btn = event?.currentTarget;
+        let originalChildren = [];
+
+        if (btn) {
+            originalChildren = Array.from(btn.childNodes).map(child => child.cloneNode(true));
+            btn.innerHTML = '';
+            btn.disabled = true;
+
+            const icon = document.createElement('span');
+            icon.textContent = '✅';
+            const text = document.createElement('span');
+            text.textContent = ' 복사 완료!';
+
+            btn.appendChild(icon);
+            btn.appendChild(text);
+        }
+
+        try {
+            if (!navigator.clipboard) {
+                throw new TypeError('navigator.clipboard is undefined');
+            }
+            navigator.clipboard.writeText(shareText).then(() => {
+                if (btn) {
+                    setTimeout(() => {
+                        btn.innerHTML = '';
+                        originalChildren.forEach(child => btn.appendChild(child));
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            }).catch(() => {
+                if (btn) {
+                    btn.innerHTML = '';
+                    const errIcon = document.createElement('span');
+                    errIcon.textContent = '❌';
+                    const errText = document.createElement('span');
+                    errText.textContent = ' 복사 실패';
+                    btn.appendChild(errIcon);
+                    btn.appendChild(errText);
+                    setTimeout(() => {
+                        btn.innerHTML = '';
+                        originalChildren.forEach(child => btn.appendChild(child));
+                        btn.disabled = false;
+                    }, 2000);
+                }
+            });
+        } catch (e) {
+            if (btn) {
+                btn.innerHTML = '';
+                const errIcon = document.createElement('span');
+                errIcon.textContent = '❌';
+                const errText = document.createElement('span');
+                errText.textContent = ' 지원하지 않는 브라우저';
+                btn.appendChild(errIcon);
+                btn.appendChild(errText);
+                setTimeout(() => {
+                    btn.innerHTML = '';
+                    originalChildren.forEach(child => btn.appendChild(child));
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
     }
 }
 
