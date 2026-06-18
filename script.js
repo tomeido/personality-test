@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -948,18 +948,51 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const btn = event ? event.currentTarget : null;
+    let originalNodes = [];
+    if (btn) {
+        originalNodes = Array.from(btn.childNodes).map(n => n.cloneNode(true));
+        btn.disabled = true;
+    }
+
+    const showMessage = (icon, text) => {
+        if (!btn) return;
+        btn.innerHTML = '';
+        const iconSpan = document.createElement('span');
+        iconSpan.textContent = icon;
+        const textNode = document.createTextNode(` ${text}`);
+        btn.appendChild(iconSpan);
+        btn.appendChild(textNode);
+
+        setTimeout(() => {
+            btn.innerHTML = '';
+            originalNodes.forEach(n => btn.appendChild(n));
+            btn.disabled = false;
+        }, 2000);
+    };
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
             text: shareText
-        }).catch(console.error);
+        }).catch((err) => {
+            console.error(err);
+            if (btn) btn.disabled = false;
+        });
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        try {
+            if (!navigator.clipboard) throw new Error("Clipboard not supported");
+            navigator.clipboard.writeText(shareText).then(() => {
+                showMessage('✅', '복사되었습니다!');
+            }).catch(() => {
+                showMessage('❌', '복사 실패');
+                console.error("Clipboard copy failed");
+            });
+        } catch (e) {
+            showMessage('❌', '복사 지원 안됨');
+            console.error(e);
+        }
     }
 }
 
