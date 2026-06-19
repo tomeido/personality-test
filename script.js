@@ -922,7 +922,28 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
+    const btn = event ? event.currentTarget : null;
+    let originalNodes = [];
+    if (btn) {
+        originalNodes = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+        btn.disabled = true;
+    }
+
+    const showSuccessFeedback = (message = '✅ 복사 완료!') => {
+        if (!btn) return;
+        btn.innerHTML = '';
+        const span = document.createElement('span');
+        span.textContent = message;
+        btn.appendChild(span);
+
+        setTimeout(() => {
+            btn.innerHTML = '';
+            originalNodes.forEach(node => btn.appendChild(node.cloneNode(true)));
+            btn.disabled = false;
+        }, 2000);
+    };
+
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -952,14 +973,27 @@ function shareResult() {
         navigator.share({
             title: '성격 테스트 결과',
             text: shareText
-        }).catch(console.error);
+        }).then(() => {
+            if (btn) {
+                btn.disabled = false;
+            }
+        }).catch((err) => {
+            console.error(err);
+            if (btn) {
+                btn.disabled = false;
+            }
+        });
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
-            alert(shareText);
-        });
+        try {
+            navigator.clipboard.writeText(shareText).then(() => {
+                showSuccessFeedback();
+            }).catch(() => {
+                showSuccessFeedback('❌ 복사 실패');
+            });
+        } catch (e) {
+             showSuccessFeedback('❌ 복사 실패');
+        }
     }
 }
 
