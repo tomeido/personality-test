@@ -1,3 +1,3 @@
-## 2024-05-05 - Dynamic Content Accessibility
-**Learning:** In vanilla JavaScript SPAs where content updates dynamically (like a quiz UI), screen readers are unaware of the DOM changes.
-**Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element of dynamic content so that screen readers can announce the updates gracefully without requiring a page reload.
+## 2026-06-22 - Inline Feedback for Clipboard Fallbacks
+**Learning:** Calling `navigator.clipboard.writeText()` in environments without secure contexts or where the Clipboard API is unavailable throws a synchronous `TypeError` rather than returning a rejected Promise. Additionally, using native `alert()` for feedback disrupts UX and is poorly received compared to contextual UI feedback.
+**Action:** Always wrap `navigator.clipboard` operations in a synchronous `try...catch` block and provide contextual, inline UI feedback (e.g., modifying button text temporarily while disabling it to prevent state corruption) rather than using `alert()`. Preserve complex button contents (like emojis) by synchronously cloning the target's original nodes before initiating the async copy.
