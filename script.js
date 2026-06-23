@@ -922,9 +922,19 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
+
+    // Capture trigger button and original content synchronously
+    const triggerBtn = event?.currentTarget;
+    const originalChildren = [];
+    if (triggerBtn) {
+        triggerBtn.childNodes.forEach(child => {
+            originalChildren.push(child.cloneNode(true));
+        });
+    }
+
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
     const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
 
@@ -955,11 +965,33 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
+        try {
+            navigator.clipboard.writeText(shareText).then(() => {
+                if (triggerBtn) {
+                    // Update button content to show success
+                    triggerBtn.innerHTML = '';
+                    const iconSpan = document.createElement('span');
+                    iconSpan.textContent = '✅';
+                    const textNode = document.createTextNode(' 복사됨');
+                    triggerBtn.appendChild(iconSpan);
+                    triggerBtn.appendChild(textNode);
+                    triggerBtn.disabled = true;
+
+                    // Restore original content after 2 seconds
+                    setTimeout(() => {
+                        triggerBtn.innerHTML = '';
+                        originalChildren.forEach(child => triggerBtn.appendChild(child));
+                        triggerBtn.disabled = false;
+                    }, 2000);
+                } else {
+                    alert('결과가 클립보드에 복사되었습니다!');
+                }
+            }).catch(() => {
+                alert(shareText);
+            });
+        } catch (e) {
             alert(shareText);
-        });
+        }
     }
 }
 

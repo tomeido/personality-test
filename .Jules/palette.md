@@ -1,3 +1,6 @@
 ## 2024-05-05 - Dynamic Content Accessibility
 **Learning:** In vanilla JavaScript SPAs where content updates dynamically (like a quiz UI), screen readers are unaware of the DOM changes.
 **Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element of dynamic content so that screen readers can announce the updates gracefully without requiring a page reload.
+## 2026-06-23 - Inline UI Feedback Over Native Alerts
+**Learning:** Replacing disruptive native `alert()` calls with inline UI feedback (e.g., updating button text and icon on click) creates a significantly smoother, less jarring user experience. It avoids browser-level interruptions and keeps users within the context of their task. Utilizing safe DOM manipulation (`document.createElement`, `document.createTextNode`, `appendChild`) to implement these changes prevents DOM-based XSS vulnerabilities and ensures complex child nodes are handled safely.
+**Action:** When implementing feedback for actions like copying to clipboard, use temporary inline state changes on the trigger element (along with disabling it to prevent rapid clicks) instead of native alerts. Always wrap potentially failing native APIs (like `navigator.clipboard`) in synchronous `try...catch` blocks.
