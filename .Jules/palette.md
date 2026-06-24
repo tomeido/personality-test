@@ -1,3 +1,4 @@
 ## 2024-05-05 - Dynamic Content Accessibility
 **Learning:** In vanilla JavaScript SPAs where content updates dynamically (like a quiz UI), screen readers are unaware of the DOM changes.
 **Action:** Always add `aria-live="polite"` and `aria-atomic="true"` to the container element of dynamic content so that screen readers can announce the updates gracefully without requiring a page reload.
+\n## 2026-06-24 - Inline Fallback Feedback\n**Learning:** Relying on native `alert()` for non-critical fallback actions (like copying to clipboard when Web Share fails) disrupts the user flow and feels unpolished.\n**Action:** Use inline interactive feedback by temporarily modifying the trigger element's content (e.g., changing button text to '✅ 복사 완료!'), disabling it during the transition, and restoring its original state.
