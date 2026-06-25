@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -948,6 +948,9 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const targetBtn = event && event.currentTarget;
+    const originalNodes = targetBtn ? Array.from(targetBtn.childNodes).map(n => n.cloneNode(true)) : null;
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
@@ -955,11 +958,32 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
+        try {
+            navigator.clipboard.writeText(shareText).then(() => {
+                if (targetBtn) {
+                    targetBtn.disabled = true;
+                    targetBtn.innerHTML = '';
+
+                    const iconSpan = document.createElement('span');
+                    iconSpan.textContent = '✅';
+
+                    const textNode = document.createTextNode(' 복사 완료!');
+
+                    targetBtn.appendChild(iconSpan);
+                    targetBtn.appendChild(textNode);
+
+                    setTimeout(() => {
+                        targetBtn.innerHTML = '';
+                        originalNodes.forEach(n => targetBtn.appendChild(n));
+                        targetBtn.disabled = false;
+                    }, 2000);
+                }
+            }).catch(() => {
+                alert(shareText);
+            });
+        } catch (e) {
             alert(shareText);
-        });
+        }
     }
 }
 
