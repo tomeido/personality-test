@@ -922,7 +922,7 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult() {
+function shareResult(event) {
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
@@ -948,6 +948,31 @@ function shareResult() {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const btn = event ? event.currentTarget : null;
+    let originalNodes = [];
+    if (btn) {
+        originalNodes = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+    }
+
+    const showSuccess = () => {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.innerHTML = '';
+
+        const iconSpan = document.createElement('span');
+        iconSpan.textContent = '✅';
+        const textNode = document.createTextNode(' 복사 완료!');
+
+        btn.appendChild(iconSpan);
+        btn.appendChild(textNode);
+
+        setTimeout(() => {
+            btn.innerHTML = '';
+            originalNodes.forEach(node => btn.appendChild(node));
+            btn.disabled = false;
+        }, 2000);
+    };
+
     if (navigator.share) {
         navigator.share({
             title: '성격 테스트 결과',
@@ -955,11 +980,19 @@ function shareResult() {
         }).catch(console.error);
     } else {
         // Fallback: copy to clipboard
-        navigator.clipboard.writeText(shareText).then(() => {
-            alert('결과가 클립보드에 복사되었습니다!');
-        }).catch(() => {
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showSuccess();
+                }).catch(() => {
+                    alert(shareText);
+                });
+            } else {
+                throw new TypeError('clipboard API not supported');
+            }
+        } catch (e) {
             alert(shareText);
-        });
+        }
     }
 }
 
