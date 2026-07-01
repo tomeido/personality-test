@@ -1,0 +1,9 @@
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /data/mbti-questions.js HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /data/enneagram-questions.js HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /data/instinct-questions.js HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /data/mbti-scenarios.js HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /data/tournament-pairs.js HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /data/pdb-data.js HTTP/1.1" 200 -
+127.0.0.1 - - [01/Jul/2026 12:18:30] "GET /script.js HTTP/1.1" 200 -
