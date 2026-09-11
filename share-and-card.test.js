@@ -86,6 +86,30 @@ test('native share success does not invoke clipboard fallback', async t => {
     assert.equal(btn.disabled, false);
 });
 
+test('pending native sharing blocks repeated clicks through clipboard fallback', async t => {
+    const { w, btn, timers } = setup(t);
+    const original = Array.from(btn.childNodes);
+    let rejectShare;
+    let nativeCalls = 0;
+    let copies = 0;
+    w.navigator.share = () => {
+        nativeCalls++;
+        return new Promise((resolve, reject) => { rejectShare = reject; });
+    };
+    w.navigator.clipboard = { writeText: async () => { copies++; } };
+    const pending = w.shareResult({ currentTarget: btn });
+    assert.equal(btn.disabled, true);
+    await w.shareResult({ currentTarget: btn });
+    assert.equal(nativeCalls, 1);
+    rejectShare(new Error('unavailable'));
+    await pending;
+    assert.equal(copies, 1);
+    assert.equal(timers.length, 1);
+    timers.shift()();
+    assert.equal(btn.disabled, false);
+    original.forEach((node, i) => assert.equal(btn.childNodes[i], node));
+});
+
 for (const [mode, expected] of Object.entries({
     mbti: ['ESTJ'], 'mbti-yesno': ['ESTJ'], 'mbti-scenario': ['ESTJ'],
     enneagram: ['8'], instinct: ['SP'], tournament: ['SP'],

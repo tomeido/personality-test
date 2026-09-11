@@ -951,11 +951,16 @@ async function shareResult(event) {
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
     if (navigator.share) {
+        if (btn) btn.disabled = true;
         try {
             await navigator.share({ title: '성격 테스트 결과', text: shareText });
+            if (btn) btn.disabled = false;
             return;
         } catch (error) {
-            if (error.name === 'AbortError') return;
+            if (error.name === 'AbortError') {
+                if (btn) btn.disabled = false;
+                return;
+            }
         }
     }
 
