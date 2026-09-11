@@ -539,7 +539,7 @@ function showResults() {
     // Prepare result cards
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
-    const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
+    const showInstinct = currentTest === 'instinct' || currentTest === 'complete' || currentTest === 'tournament';
 
     if (showMBTI) {
         displayMBTIResult();
@@ -922,11 +922,13 @@ function getEnneagramType() {
 }
 
 // ===== Share Result =====
-function shareResult(event) {
+async function shareResult(event) {
+    const btn = event?.currentTarget;
+    if (btn?.disabled) return;
     let shareText = '🧠 나의 성격 테스트 결과\n\n';
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
-    const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
+    const showInstinct = currentTest === 'instinct' || currentTest === 'complete' || currentTest === 'tournament';
 
     if (showMBTI) {
         const mbtiType = document.getElementById('result-mbti-type').textContent;
@@ -949,40 +951,32 @@ function shareResult(event) {
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
     if (navigator.share) {
-        navigator.share({
-            title: '성격 테스트 결과',
-            text: shareText
-        }).catch(console.error);
-    } else {
-        // Fallback: copy to clipboard
-        const btn = event?.currentTarget;
-        let originalChildren = [];
-        if (btn) {
-            originalChildren = Array.from(btn.childNodes).map(n => n.cloneNode(true));
-        }
-
         try {
-            navigator.clipboard.writeText(shareText).then(() => {
-                if (btn) {
-                    btn.innerHTML = '';
-                    const span = document.createElement('span');
-                    span.textContent = '✅ 복사 완료!';
-                    btn.appendChild(span);
-                    btn.disabled = true;
+            await navigator.share({ title: '성격 테스트 결과', text: shareText });
+            return;
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+        }
+    }
 
-                    setTimeout(() => {
-                        btn.innerHTML = '';
-                        originalChildren.forEach(child => btn.appendChild(child));
-                        btn.disabled = false;
-                    }, 2000);
-                } else {
-                    alert('결과가 클립보드에 복사되었습니다!');
-                }
-            }).catch(() => {
-                alert(shareText);
-            });
-        } catch (e) {
-            alert(shareText);
+    const originalChildren = btn ? Array.from(btn.childNodes) : [];
+    const status = document.getElementById('share-status');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = '';
+
+    try {
+        await navigator.clipboard.writeText(shareText);
+        if (btn) btn.textContent = '복사 완료!';
+        if (status) status.textContent = '결과가 클립보드에 복사되었습니다.';
+    } catch (error) {
+        if (btn) btn.textContent = '복사 실패';
+        if (status) status.textContent = '복사하지 못했습니다. 아래 결과를 직접 복사해 주세요.\n' + shareText;
+    } finally {
+        if (btn) {
+            setTimeout(() => {
+                btn.replaceChildren(...originalChildren);
+                btn.disabled = false;
+            }, 2000);
         }
     }
 }
@@ -1000,7 +994,7 @@ function buildResultCardCanvas() {
     // ---- Determine which sections are visible ----
     const showMBTI = currentTest === 'mbti' || currentTest === 'both' || currentTest === 'complete' || currentTest === 'mbti-yesno' || currentTest === 'mbti-scenario';
     const showEnneagram = currentTest === 'enneagram' || currentTest === 'both' || currentTest === 'complete';
-    const showInstinct = currentTest === 'instinct' || currentTest === 'complete';
+    const showInstinct = currentTest === 'instinct' || currentTest === 'complete' || currentTest === 'tournament';
 
     // ---- Per-section palettes (each section gets its own gradient identity) ----
     // displayIndex is the canonical "chapter number" — used for BOTH eyebrow label
@@ -1071,7 +1065,7 @@ function buildResultCardCanvas() {
     const trackH = bottomY - topY;
     const gap = sections.length >= 3 ? 22 : 30;
     // Card height: comfortable for 3, taller for 1–2 to avoid sparseness.
-    // Single-card mode gets a poster-tall card (~800) plus a lookalike row drawn beneath.
+    // Single-card mode gets a poster-tall card (~800).
     const maxCardH = sections.length >= 3 ? 290
                     : sections.length === 2 ? 380
                     : 800;
@@ -1391,13 +1385,6 @@ function drawResultCard(ctx, x, y, w, h, section, index, totalSections) {
         ctx.stroke();
     }
 
-    // ---- Poster-mode extras: lookalike avatar row + tag chips ---------
-    // Fills the vertical space that would otherwise read as orphaned canvas.
-    if (poster) {
-        drawLookalikeRow(ctx, contentX, y + h * 0.78, p, section);
-        drawTagChips(ctx, contentX, y + h - 80, p, section);
-    }
-
     ctx.restore();
 }
 
@@ -1414,129 +1401,6 @@ function fitBigTypeSize(ctx, text, maxWidth, ceiling) {
         size -= 4;
     }
     return size;
-}
-
-// ---- Poster-mode decoration: row of 3 gradient-filled lookalike avatars ----
-// Pure decoration, but it sells the "your tribe" idea and fills the
-// otherwise-empty lower half of the poster card. The initials are derived
-// from the section big-type or section.ko so they feel earned, not random.
-function drawLookalikeRow(ctx, x, y, palette, section) {
-    ctx.save();
-    // Label above the row — small, all-caps, tracked
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = '600 16px "Noto Sans KR", system-ui, sans-serif';
-    drawSpacedText(ctx, 'LOOKALIKES', x, y - 18, 3.0);
-
-    // Derive 3 distinct "initials" from section data — deterministic stub avatars.
-    const seed = `${section.key}-${section.big}-${section.small}`;
-    const palettes = [
-        [palette.a, palette.b],
-        [palette.b, palette.c],
-        [palette.c, palette.a]
-    ];
-    const initials = pickAvatarInitials(seed);
-
-    const R = 42;          // radius
-    const stepX = R * 2 + 18;
-    let cx = x + R;
-    const cy = y + R + 6;
-
-    for (let i = 0; i < 3; i++) {
-        // Disc fill with per-avatar gradient
-        const g = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
-        g.addColorStop(0, palettes[i][0]);
-        g.addColorStop(1, palettes[i][1]);
-        // Subtle glow
-        ctx.save();
-        ctx.shadowColor = hexToRgba(palette.b, 0.45);
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(cx, cy, R, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Ring stroke
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(cx, cy, R, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Initials inside
-        ctx.fillStyle = 'rgba(15,10,28,0.85)';
-        ctx.font = '800 28px "Noto Sans KR", system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(initials[i], cx, cy + 2);
-
-        cx += stepX;
-    }
-    ctx.restore();
-}
-
-// ---- Poster-mode decoration: faux tag chips beneath the lookalikes ----
-function drawTagChips(ctx, x, y, palette, section) {
-    // Tags derived from section identity — short, evocative.
-    const TAG_LIBRARY = {
-        mbti:      ['감정형', '아이디어 메이커', '조용한 몰입'],
-        enneagram: ['깊은 감수성', '독자성', '의미 추적자'],
-        instinct:  ['일대일 본능', '강렬한 연결', '집중과 몰입']
-    };
-    const tags = TAG_LIBRARY[section.key] || ['고유함', '깊이', '몰입'];
-
-    ctx.save();
-    ctx.textBaseline = 'middle';
-    ctx.font = '500 19px "Noto Sans KR", system-ui, sans-serif';
-
-    let cx = x;
-    const cy = y;
-    const padX = 16, padY = 9;
-    const gap = 10;
-
-    for (const tag of tags) {
-        const tw = ctx.measureText(tag).width;
-        const chipW = tw + padX * 2;
-        const chipH = 38;
-
-        // Chip background: faint glass with palette tint
-        ctx.fillStyle = hexToRgba(palette.b, 0.12);
-        roundRect(ctx, cx, cy - chipH / 2, chipW, chipH, chipH / 2, true, false);
-        ctx.strokeStyle = hexToRgba(palette.a, 0.35);
-        ctx.lineWidth = 1;
-        roundRect(ctx, cx + 0.5, cy - chipH / 2 + 0.5, chipW - 1, chipH - 1, (chipH - 1) / 2, false, true);
-
-        // Tag text
-        ctx.fillStyle = 'rgba(255,255,255,0.86)';
-        ctx.textAlign = 'left';
-        ctx.fillText(tag, cx + padX, cy + 1);
-
-        cx += chipW + gap;
-    }
-    ctx.restore();
-}
-
-// Deterministic 3 sets of initials from a seed string. ASCII only so we don't
-// accidentally render glyphs that the fallback fonts don't ship.
-function pickAvatarInitials(seed) {
-    let h = 0;
-    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) & 0xffffffff;
-    const POOL = ['MJ','SY','KH','JW','HR','EJ','DK','TY','NH','RE','BL','AV','SN','IL'];
-    const out = [];
-    for (let i = 0; i < 3; i++) {
-        h = (h * 1103515245 + 12345) & 0x7fffffff;
-        out.push(POOL[h % POOL.length]);
-    }
-    // Dedupe — if any collision, walk forward.
-    for (let i = 1; i < out.length; i++) {
-        let guard = 0;
-        while (out.slice(0, i).includes(out[i]) && guard++ < POOL.length) {
-            out[i] = POOL[(POOL.indexOf(out[i]) + 1) % POOL.length];
-        }
-    }
-    return out;
 }
 
 function drawSpacedText(ctx, text, x, y, spacing) {
