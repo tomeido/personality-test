@@ -5,3 +5,7 @@
 ## 2024-05-24 - Dynamic Visualization Accessibility
 **Learning:** Real-time visual updates (like progress bars or charts) need ARIA live regions so screen reader users get the same continuous feedback as sighted users.
 **Action:** Apply `aria-live="polite"` to the container of the dynamic visualization elements.
+
+## 2025-02-12 - Screen Reader Experience with Decorative Emojis
+**Learning:** Decorative emojis can degrade the screen reader experience by adding noise, especially when they are accompanied by text that already conveys the meaning.
+**Action:** Consistently apply `aria-hidden="true"` to wrapper elements (e.g., `<div class="card-icon">`, `<span class="answer-icon">`) or `<span>` tags containing decorative emojis.
