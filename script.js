@@ -1468,10 +1468,24 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    if (btn?.disabled) return;
+
+    let originalChildren = [];
+    if (btn) {
+        originalChildren = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+        btn.disabled = true;
+        btn.textContent = '⏳ 저장 중...';
+    }
+
+    // Yield to allow UI to update the button text
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     const canvas = buildResultCardCanvas();
     const filename = `personality-result-${Date.now()}.png`;
 
+    let shared = false;
     // Prefer Web Share API with file (mobile)
     if (navigator.canShare && typeof canvas.toBlob === 'function') {
         try {
@@ -1480,22 +1494,41 @@ async function downloadResultCard() {
                 const file = new File([blob], filename, { type: 'image/png' });
                 if (navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
-                    return;
+                    shared = true;
                 }
             }
         } catch (err) {
+            if (err.name === 'AbortError') {
+                if (btn) {
+                    btn.innerHTML = '';
+                    originalChildren.forEach(child => btn.appendChild(child));
+                    btn.disabled = false;
+                }
+                return;
+            }
             // Fall through to download
         }
     }
 
-    // Fallback: trigger a download
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if (!shared) {
+        // Fallback: trigger a download
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    if (btn) {
+        btn.textContent = '✅ 저장 완료!';
+        setTimeout(() => {
+            btn.innerHTML = '';
+            originalChildren.forEach(child => btn.appendChild(child));
+            btn.disabled = false;
+        }, 2000);
+    }
 }
 
 // ===== Utility Functions =====
