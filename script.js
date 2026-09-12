@@ -1476,7 +1476,7 @@ async function downloadResultCard(event) {
     if (btn) {
         originalChildren = Array.from(btn.childNodes).map(node => node.cloneNode(true));
         btn.disabled = true;
-        btn.innerHTML = '<span aria-hidden="true">⏳</span> 저장 중...';
+        btn.textContent = '저장 중...';
     }
 
     // Yield to allow UI to update the button text
@@ -1522,7 +1522,7 @@ async function downloadResultCard(event) {
     }
 
     if (btn) {
-        btn.innerHTML = '<span aria-hidden="true">✅</span> 저장 완료!';
+        btn.textContent = '저장 완료!';
         setTimeout(() => {
             btn.innerHTML = '';
             originalChildren.forEach(child => btn.appendChild(child));
