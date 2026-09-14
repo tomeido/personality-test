@@ -1499,6 +1499,10 @@ async function downloadResultCard(event) {
                 }
             } catch (err) {
                 if (err.name === 'AbortError') {
+                    if (btn) {
+                        btn.replaceChildren(...originalChildren);
+                        btn.disabled = false;
+                    }
                     return; // User cancelled share, don't fallback to download
                 }
                 // Fall through to download
@@ -1518,13 +1522,15 @@ async function downloadResultCard(event) {
 
         if (btn) {
             btn.textContent = '저장 완료!';
-        }
-    } finally {
-        if (btn) {
             setTimeout(() => {
                 btn.replaceChildren(...originalChildren);
                 btn.disabled = false;
             }, 2000);
+        }
+    } catch (err) {
+        if (btn) {
+            btn.replaceChildren(...originalChildren);
+            btn.disabled = false;
         }
     }
 }
