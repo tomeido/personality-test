@@ -950,6 +950,8 @@ async function shareResult(event) {
 
     shareText += '\n✨ 실시간 성격 테스트로 나를 알아보세요!';
 
+    const originalChildren = btn ? Array.from(btn.childNodes).map(node => node.cloneNode(true)) : [];
+
     if (navigator.share) {
         if (btn) btn.disabled = true;
         try {
@@ -964,17 +966,16 @@ async function shareResult(event) {
         }
     }
 
-    const originalChildren = btn ? Array.from(btn.childNodes) : [];
     const status = document.getElementById('share-status');
     if (btn) btn.disabled = true;
     if (status) status.textContent = '';
 
     try {
         await navigator.clipboard.writeText(shareText);
-        if (btn) btn.textContent = '복사 완료!';
+        if (btn) btn.innerHTML = '<span aria-hidden="true">✅</span> 복사 완료!';
         if (status) status.textContent = '결과가 클립보드에 복사되었습니다.';
     } catch (error) {
-        if (btn) btn.textContent = '복사 실패';
+        if (btn) btn.innerHTML = '<span aria-hidden="true">❌</span> 복사 실패';
         if (status) status.textContent = '복사하지 못했습니다. 아래 결과를 직접 복사해 주세요.\n' + shareText;
     } finally {
         if (btn) {
@@ -1468,9 +1469,23 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    if (btn?.disabled) return;
+
+    let originalChildren = [];
+    if (btn) {
+        originalChildren = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+        btn.disabled = true;
+        btn.innerHTML = '<span aria-hidden="true">⏳</span> 이미지 생성 중...';
+        // Yield to allow the browser to render the loading state
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
     const canvas = buildResultCardCanvas();
     const filename = `personality-result-${Date.now()}.png`;
+
+    let success = false;
 
     // Prefer Web Share API with file (mobile)
     if (navigator.canShare && typeof canvas.toBlob === 'function') {
@@ -1480,22 +1495,42 @@ async function downloadResultCard() {
                 const file = new File([blob], filename, { type: 'image/png' });
                 if (navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
-                    return;
+                    success = true;
                 }
             }
         } catch (err) {
+            if (err.name === 'AbortError') {
+                if (btn) {
+                    btn.replaceChildren(...originalChildren);
+                    btn.disabled = false;
+                }
+                return;
+            }
             // Fall through to download
         }
     }
 
     // Fallback: trigger a download
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    if (!success) {
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        success = true;
+    }
+
+    if (btn) {
+        if (success) {
+            btn.innerHTML = '<span aria-hidden="true">✅</span> 저장 완료!';
+        }
+        setTimeout(() => {
+            btn.replaceChildren(...originalChildren);
+            btn.disabled = false;
+        }, 2000);
+    }
 }
 
 // ===== Utility Functions =====
