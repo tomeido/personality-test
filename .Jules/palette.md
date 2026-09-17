@@ -13,3 +13,7 @@
 ## 2024-11-20 - Inline Clipboard Feedback
 **Learning:** Native `alert()` is disruptive and stops script execution. It shouldn't be used for routine feedback like copying text to clipboard. Replacing it with inline UI feedback on the button is much smoother, but it's crucial to clone the element's original `childNodes` synchronously before the async copy operation so the button can be perfectly restored later, preserving structure like icons. Additionally, handling clipboard APIs requires synchronous `try...catch` because it throws immediately in non-secure or unsupported environments.
 **Action:** When replacing blocking notifications with inline UI state on interactive elements, always synchronously capture `event.currentTarget` and clone `childNodes` (to preserve icons/emojis). Wrap `navigator.clipboard.writeText` in a synchronous `try...catch` to ensure error fallbacks run reliably in all environments.
+
+## 2026-09-14 - Yielding the Main Thread for Inline UI Feedback
+**Learning:** When providing inline UI feedback (e.g., loading states) right before heavy synchronous operations like building a large canvas, the main thread may block before the browser has a chance to render the updated DOM.
+**Action:** Explicitly yield execution to the main thread (e.g., `await new Promise(resolve => setTimeout(resolve, 50))`) to allow the browser to render the updated DOM (like "이미지 생성 중...") before the heavy operation begins.
