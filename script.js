@@ -1468,7 +1468,20 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    if (btn?.disabled) return;
+
+    const originalChildren = btn ? Array.from(btn.childNodes).map(n => n.cloneNode(true)) : [];
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ 처리 중...';
+    }
+
+    // Yield execution to allow UI update
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     const canvas = buildResultCardCanvas();
     const filename = `personality-result-${Date.now()}.png`;
 
@@ -1480,11 +1493,25 @@ async function downloadResultCard() {
                 const file = new File([blob], filename, { type: 'image/png' });
                 if (navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
+                    if (btn) {
+                        btn.textContent = '✅ 공유 완료!';
+                        setTimeout(() => {
+                            btn.replaceChildren(...originalChildren);
+                            btn.disabled = false;
+                        }, 2000);
+                    }
                     return;
                 }
             }
         } catch (err) {
-            // Fall through to download
+            if (err.name === 'AbortError') {
+                if (btn) {
+                    btn.replaceChildren(...originalChildren);
+                    btn.disabled = false;
+                }
+                return;
+            }
+            // Fall through to download on other errors
         }
     }
 
@@ -1496,6 +1523,14 @@ async function downloadResultCard() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
+    if (btn) {
+        btn.textContent = '✅ 저장 완료!';
+        setTimeout(() => {
+            btn.replaceChildren(...originalChildren);
+            btn.disabled = false;
+        }, 2000);
+    }
 }
 
 // ===== Utility Functions =====
