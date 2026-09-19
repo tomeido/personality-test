@@ -1468,34 +1468,63 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
-    const canvas = buildResultCardCanvas();
-    const filename = `personality-result-${Date.now()}.png`;
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    const originalChildren = btn ? Array.from(btn.childNodes).map(node => node.cloneNode(true)) : [];
 
-    // Prefer Web Share API with file (mobile)
-    if (navigator.canShare && typeof canvas.toBlob === 'function') {
-        try {
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            if (blob) {
-                const file = new File([blob], filename, { type: 'image/png' });
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
-                    return;
-                }
-            }
-        } catch (err) {
-            // Fall through to download
-        }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span aria-hidden="true">⏳</span> 이미지 생성 중...';
+        // Yield execution to allow the browser to paint the loading state
+        await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // Fallback: trigger a download
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+        const canvas = buildResultCardCanvas();
+        const filename = `personality-result-${Date.now()}.png`;
+
+        let shared = false;
+        // Prefer Web Share API with file (mobile)
+        if (navigator.canShare && typeof canvas.toBlob === 'function') {
+            try {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                if (blob) {
+                    const file = new File([blob], filename, { type: 'image/png' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
+                        shared = true;
+                    }
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    return;
+                }
+                // Fall through to download
+            }
+        }
+
+        if (!shared) {
+            // Fallback: trigger a download
+            const dataURL = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = dataURL;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        if (btn) {
+            btn.innerHTML = '<span aria-hidden="true">✅</span> 완료!';
+        }
+    } finally {
+        if (btn) {
+            setTimeout(() => {
+                btn.replaceChildren(...originalChildren);
+                btn.disabled = false;
+            }, 2000);
+        }
+    }
 }
 
 // ===== Utility Functions =====
