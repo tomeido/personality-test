@@ -1468,34 +1468,71 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
-    const canvas = buildResultCardCanvas();
-    const filename = `personality-result-${Date.now()}.png`;
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    if (btn?.disabled) return;
+    const originalChildren = btn ? Array.from(btn.childNodes).map(node => node.cloneNode(true)) : [];
 
-    // Prefer Web Share API with file (mobile)
-    if (navigator.canShare && typeof canvas.toBlob === 'function') {
-        try {
+    if (btn) {
+        btn.disabled = true;
+        const spinner = document.createElement('span');
+        spinner.setAttribute('aria-hidden', 'true');
+        spinner.className = 'spinner';
+        spinner.innerHTML = '⏳';
+
+        btn.innerHTML = '';
+        btn.appendChild(spinner);
+        btn.appendChild(document.createTextNode(' 저장 중...'));
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    try {
+        const canvas = buildResultCardCanvas();
+        const filename = `personality-result-${Date.now()}.png`;
+
+        // Prefer Web Share API with file (mobile)
+        if (navigator.canShare && typeof canvas.toBlob === 'function') {
             const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             if (blob) {
                 const file = new File([blob], filename, { type: 'image/png' });
                 if (navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
+                    if (btn) {
+                        btn.innerHTML = '<span aria-hidden="true">✅</span> 공유 완료';
+                    }
                     return;
                 }
             }
-        } catch (err) {
-            // Fall through to download
+        }
+
+        // Fallback: trigger a download
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        if (btn) {
+            btn.innerHTML = '<span aria-hidden="true">✅</span> 저장 완료';
+        }
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            return;
+        }
+        if (btn) {
+            btn.innerHTML = '<span aria-hidden="true">❌</span> 오류 발생';
+        }
+    } finally {
+        if (btn) {
+            setTimeout(() => {
+                btn.innerHTML = '';
+                originalChildren.forEach(node => btn.appendChild(node));
+                btn.disabled = false;
+            }, 2000);
         }
     }
-
-    // Fallback: trigger a download
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
 }
 
 // ===== Utility Functions =====
