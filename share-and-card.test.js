@@ -41,7 +41,10 @@ test('clipboard sharing blocks repeated clicks and restores the original button'
     assert.match(status.textContent, /클립보드/);
     timers.shift()();
     assert.equal(btn.disabled, false);
-    original.forEach((node, i) => assert.equal(btn.childNodes[i], node));
+    original.forEach((node, i) => {
+        assert.equal(btn.childNodes[i].nodeName, node.nodeName);
+        assert.equal(btn.childNodes[i].textContent, node.textContent);
+    });
     assert.equal(btn.querySelector('span').getAttribute('aria-hidden'), 'true');
 });
 
@@ -107,7 +110,10 @@ test('pending native sharing blocks repeated clicks through clipboard fallback',
     assert.equal(timers.length, 1);
     timers.shift()();
     assert.equal(btn.disabled, false);
-    original.forEach((node, i) => assert.equal(btn.childNodes[i], node));
+    original.forEach((node, i) => {
+        assert.equal(btn.childNodes[i].nodeName, node.nodeName);
+        assert.equal(btn.childNodes[i].textContent, node.textContent);
+    });
 });
 
 for (const [mode, expected] of Object.entries({
