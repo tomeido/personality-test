@@ -1468,34 +1468,95 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
-    const canvas = buildResultCardCanvas();
-    const filename = `personality-result-${Date.now()}.png`;
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    let originalChildren = [];
 
-    // Prefer Web Share API with file (mobile)
-    if (navigator.canShare && typeof canvas.toBlob === 'function') {
-        try {
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            if (blob) {
-                const file = new File([blob], filename, { type: 'image/png' });
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
-                    return;
-                }
-            }
-        } catch (err) {
-            // Fall through to download
-        }
+    if (btn) {
+        if (btn.disabled) return;
+        originalChildren = Array.from(btn.childNodes).map(node => node.cloneNode(true));
+        btn.disabled = true;
+
+        const loadingSpan = document.createElement('span');
+        loadingSpan.setAttribute('aria-hidden', 'true');
+        loadingSpan.textContent = '⏳';
+
+        const textNode = document.createTextNode(' 이미지 생성 중...');
+        btn.replaceChildren(loadingSpan, textNode);
+
+        // Yield to main thread so the loading state renders
+        await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // Fallback: trigger a download
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+        const canvas = buildResultCardCanvas();
+        const filename = `personality-result-${Date.now()}.png`;
+
+        // Prefer Web Share API with file (mobile)
+        if (navigator.canShare && typeof canvas.toBlob === 'function') {
+            try {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                if (blob) {
+                    const file = new File([blob], filename, { type: 'image/png' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
+                        if (btn) {
+                            btn.replaceChildren(...originalChildren);
+                            btn.disabled = false;
+                        }
+                        return;
+                    }
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    if (btn) {
+                        btn.replaceChildren(...originalChildren);
+                        btn.disabled = false;
+                    }
+                    return;
+                }
+                // Fall through to download
+            }
+        }
+
+        // Fallback: trigger a download
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        if (btn) {
+            const successSpan = document.createElement('span');
+            successSpan.setAttribute('aria-hidden', 'true');
+            successSpan.textContent = '✅';
+
+            const textNode = document.createTextNode(' 저장 완료!');
+            btn.replaceChildren(successSpan, textNode);
+
+            setTimeout(() => {
+                btn.replaceChildren(...originalChildren);
+                btn.disabled = false;
+            }, 2000);
+        }
+    } catch (err) {
+        if (btn) {
+            const errorSpan = document.createElement('span');
+            errorSpan.setAttribute('aria-hidden', 'true');
+            errorSpan.textContent = '❌';
+
+            const textNode = document.createTextNode(' 저장 실패');
+            btn.replaceChildren(errorSpan, textNode);
+
+            setTimeout(() => {
+                btn.replaceChildren(...originalChildren);
+                btn.disabled = false;
+            }, 2000);
+        }
+        console.error(err);
+    }
 }
 
 // ===== Utility Functions =====
