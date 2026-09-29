@@ -1468,34 +1468,72 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
     if (stroke) ctx.stroke();
 }
 
-async function downloadResultCard() {
-    const canvas = buildResultCardCanvas();
-    const filename = `personality-result-${Date.now()}.png`;
+async function downloadResultCard(event) {
+    const btn = event?.currentTarget;
+    if (btn?.disabled) return;
 
-    // Prefer Web Share API with file (mobile)
-    if (navigator.canShare && typeof canvas.toBlob === 'function') {
-        try {
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            if (blob) {
-                const file = new File([blob], filename, { type: 'image/png' });
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
-                    return;
-                }
-            }
-        } catch (err) {
-            // Fall through to download
-        }
+    const originalChildren = btn ? Array.from(btn.childNodes).map(node => node.cloneNode(true)) : [];
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '저장 중...';
+        await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // Fallback: trigger a download
-    const dataURL = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataURL;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    let isAborted = false;
+    let isShared = false;
+
+    try {
+        const canvas = buildResultCardCanvas();
+        const filename = `personality-result-${Date.now()}.png`;
+
+        // Prefer Web Share API with file (mobile)
+        if (navigator.canShare && typeof canvas.toBlob === 'function') {
+            try {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                if (blob) {
+                    const file = new File([blob], filename, { type: 'image/png' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file], title: '내 성격 테스트 결과' });
+                        isShared = true;
+                    }
+                }
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    isAborted = true;
+                }
+                // Fall through to download if not aborted
+            }
+        }
+
+        if (isAborted || isShared) {
+            return;
+        }
+
+        // Fallback: trigger a download
+        const dataURL = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        if (btn) btn.textContent = '저장 완료!';
+    } catch (err) {
+        if (btn) btn.textContent = '저장 실패';
+    } finally {
+        if (btn) {
+            if (isAborted || isShared) {
+                btn.replaceChildren(...originalChildren);
+                btn.disabled = false;
+            } else {
+                setTimeout(() => {
+                    btn.replaceChildren(...originalChildren);
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
+    }
 }
 
 // ===== Utility Functions =====
